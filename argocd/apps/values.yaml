@@ -1,0 +1,63 @@
+argocd-apps:
+  applications:
+  - name: argocd
+    namespace: argocd
+    source:
+      repoURL: git@github.com:MyChaOS87/sloth.git
+      targetRevision: HEAD
+      path: argocd/argocd
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: argocd
+    project: argocd
+  - name: argocd-apps
+    namespace: argocd
+    source:
+      repoURL: git@github.com:MyChaOS87/sloth.git
+      targetRevision: HEAD
+      path: argocd/apps
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: argocd
+    project: argocd
+  - name: sealed-secrets
+    namespace: argocd
+    source:
+      repoURL: git@github.com:MyChaOS87/sloth.git
+      targetRevision: HEAD
+      path: argocd/sealed-secrets
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: kube-system
+    project: kube-system
+  projects:
+  - name: argocd
+    namespace: argocd
+    additionalLabels: {}
+    additionalAnnotations: {}
+    description: Argocd Project
+    sourceRepos:
+    - '*'
+    destinations:
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    orphanedResources:
+      warn: false
+  - name: kube-system
+    namespace: argocd
+    additionalLabels: {}
+    additionalAnnotations: {}
+    description: sealed-secrets
+    sourceRepos:
+    - '*'
+    destinations:
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+    orphanedResources:
+      warn: false
