@@ -8,7 +8,7 @@ echo Creating new SSH Keypair ... 1>&2
 ssh-keygen -q -b4096 -N '' -t rsa -f .secrets/.ssh/id_rsa -C argocd@sloth
 
 echo Sealing Private key into secret ... 1>&2
-kubeseal > argocd/argocd/templates/repository.sealed.yaml << EOF
+kubeseal > argocd/argocd/templates/repository.sealed.json << EOF
 apiVersion: v1
 kind: Secret
 metadata:

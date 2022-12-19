@@ -1,0 +1,15 @@
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: cm4-01
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  disks:
+    disk-0:
+      path: /var/lib/longhorn/disk0/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 10737418240
+  evictionRequested: false
+  name: cm4-01

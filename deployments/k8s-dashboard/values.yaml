@@ -1,0 +1,10 @@
+kubernetes-dashboard:
+  protocolHttp: true
+  service:
+    externalPort: 80
+  extraArgs:
+    - --enable-insecure-login
+  ingress: 
+    enabled: true
+    hosts: 
+      - dashboard.k8s.lan

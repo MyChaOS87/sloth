@@ -10,6 +10,10 @@ argocd-apps:
       server: https://kubernetes.default.svc
       namespace: argocd
     project: argocd
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
   - name: argocd-apps
     namespace: argocd
     source:
@@ -20,6 +24,10 @@ argocd-apps:
       server: https://kubernetes.default.svc
       namespace: argocd
     project: argocd
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
   - name: sealed-secrets
     namespace: argocd
     source:
@@ -30,6 +38,16 @@ argocd-apps:
       server: https://kubernetes.default.svc
       namespace: kube-system
     project: kube-system
+  - name: deployments
+    namespace: argocd
+    source:
+      repoURL: git@github.com:MyChaOS87/sloth.git
+      targetRevision: HEAD
+      path: deployments
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: argocd
+    project: argocd
   projects:
   - name: argocd
     namespace: argocd
