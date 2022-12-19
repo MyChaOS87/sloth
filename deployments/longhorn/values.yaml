@@ -1,0 +1,6 @@
+longhorn:
+  defaultSettings:
+    createDefaultDiskLabeledNodes: true
+  ingress:
+    enabled: true
+    host: longhorn.k8s.lan

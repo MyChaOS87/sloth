@@ -1,0 +1,11 @@
+apiVersion: v2
+name: kubernetes-dashboard
+description: A Helm chart wrapping kubernetes-dashboard
+
+version: 6.0.0-r1
+appVersion: 6.0.0-r1
+
+dependencies:
+  - name: kubernetes-dashboard
+    version: 6.0.0
+    repository: https://kubernetes.github.io/dashboard/
