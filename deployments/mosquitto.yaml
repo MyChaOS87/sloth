@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mosquitto
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  destinations:
+  - namespace: mosquitto
+    server: https://kubernetes.default.svc
+  orphanedResources:
+    warn: false
+  sourceRepos:
+  - '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mosquitto
+  namespace: argocd
+spec:
+  destination:
+    namespace: mosquitto
+    server: https://kubernetes.default.svc
+  project: mosquitto
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: HEAD
+    path: deployments/mosquitto
+    helm:
+      values: |
+        service:
+          type: LoadBalancer
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
