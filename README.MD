@@ -18,6 +18,7 @@ I try to keep as much as possible hardware independent.
 * [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets) to solve the problem: "I can manage all my K8s config in git, except Secrets."
 * [longhorn](https://longhorn.io) as persistent storage provider
 * [kubernetes-dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
+* [mosquitto](https://mosquitto.org/) as MQTT broker
 
 It's a hobby project, so see [Disclaimer](#disclaimer).
 
@@ -26,7 +27,7 @@ It's a hobby project, so see [Disclaimer](#disclaimer).
   * add data-disks on the RPi (the baseboards with M2 slot which I want for the CM4, seem to be unavailable atm. And the others do not support the sd card on a CM with eMMC onboard...)
   * switch to a proper version not being on a RC... (Kubernetes 1.25 is not supported by any stable release yet)
 * More CM4 RPis (but those are hard to find these days)
-* mosqitto
+* mosquitto authentication
 * influxdb
 * grafana
 * SSO via keycloak
@@ -98,6 +99,7 @@ k8sHost=cm4-01.lan ./kubectl-config-remote.sh
 * kubectl (configured to be used against your k3s "cluster")
 * helm 
 * kubeseal - for sealing secrets (guide in [Prepare Secret](#prepare-secret))
+* yq
 
 ### Prepare Secret
 as we use [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets) my secret checked into the repository will not help you, as your cluster cannot decrypt it.
@@ -131,6 +133,7 @@ This is a hobby home project for home use only, it is not intended to be used in
 
 Consider this explicitly as **NOT PRODUCTION READY!**
 
+At the current stage I am not shy to break stuff!
 
 ## License
 [MIT License](LICENSE)
