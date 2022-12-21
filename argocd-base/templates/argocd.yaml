@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 5.16.6
+    chart: argo-cd
+    helm:
+      values: |
+        dex:
+          enabled: false
+        configs:
+          params: 
+            server.insecure: true  
+        server:
+          ingress:
+            enabled: true
+            hosts:
+              - argocd.k8s.lan   
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd 
+  project: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

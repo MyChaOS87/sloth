@@ -1,34 +1,60 @@
 .DEFAULT_GOAL := argocd.install
 
+SEALEDSECRETSVERSION=$(shell yq ".spec.source.targetRevision" argocd-base/templates/sealed-secrets.yaml)
+ARGOCDVERSION=$(shell yq ".spec.source.targetRevision" argocd-base/templates/argocd.yaml)
+
+.PHONY: checkPrerequisites.kubectl
+checkPrerequisites.kubectl:
+	@command -v kubectl >/dev/null || (echo "ERROR: cannot find tool 'kubectl'"; false)
+
+.PHONY: checkPrerequisites.helm
+checkPrerequisites.helm: checkPrerequisites.kubectl
+	@command -v helm >/dev/null || (echo "ERROR: cannot find tool 'helm'"; false)
+
+.PHONY: checkPrerequisites.yq
+checkPrerequisites.yq: 
+	@command -v yq >/dev/null || (echo "ERROR: cannot find tool 'yq'"; false)
+
+.PHONY: checkPrerequisites.kubeseal
+checkPrerequisites.kubeseal: checkPrerequisites.kubectl
+	@command -v kubeseal >/dev/null || (echo "ERROR: cannot find tool 'kubeseal'"; false)
+
+.PHONY: checkPrerequisites.all
+checkPrerequisites.all: checkPrerequisites.kubectl checkPrerequisites.helm checkPrerequisites.yq checkPrerequisites.kubeseal
+
 .PHONY: sealed-secrets.install
-sealed-secrets.install:
-	helm install sealed-secrets ./argocd/sealed-secrets --namespace kube-system
+sealed-secrets.install: checkPrerequisites.helm checkPrerequisites.yq 
+	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+	helm install sealed-secrets --namespace kube-system --set-string fullnameOverride=sealed-secrets-controller --version $(SEALEDSECRETSVERSION) sealed-secrets/sealed-secrets
 
 .PHONY: sealed-secrets.seal.sshRepoKey
-sealed-secrets.seal.sshDeployKey:
+sealed-secrets.seal.sshDeployKey: checkPrerequisites.kubeseal
 	./create-and-seal-deploy-key.sh
 
 .PHONY: sealed-secrets.uninstall
-sealed-secrets.uninstall:
+sealed-secrets.uninstall: checkPrerequisites.helm
 	helm uninstall sealed-secrets --namespace kube-system
 
 .PHONY: argocd.install
-argocd.install:
-	helm install argocd ./argocd/argocd --namespace argocd --create-namespace
-	helm install argocd-apps ./argocd/apps --namespace argocd
+argocd.install: checkPrerequisites.helm checkPrerequisites.yq
+	helm repo add argo https://argoproj.github.io/argo-helm
+	yq -r .spec.source.helm.values argocd-base/templates/argocd.yaml > .argocd.values.yaml
+	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f .argocd.values.yaml argo/argo-cd
+	helm install argocd-base ./argocd-base --namespace argocd
+	rm .argocd.values.yaml
 
 .PHONY: argocd.password
-argocd.password:
+argocd.password: checkPrerequisites.kubectl
 	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 
 
 .PHONY: argocd.port-forward
-argocd.port-forward:
+argocd.port-forward: checkPrerequisites.kubectl
 	kubectl port-forward svc/argocd-server -n argocd 8080:80
 
 .PHONY: argocd.uninstall
-argocd.uninstall:
-	helm uninstall argocd-apps --namespace argocd
+argocd.uninstall: checkPrerequisites.helm
+	helm uninstall argocd-base --namespace argocd
 	helm uninstall argocd --namespace argocd 
 	kubectl delete ns argocd
 	kubectl delete CustomResourceDefinition applications.argoproj.io applicationsets.argoproj.io appprojects.argoproj.io

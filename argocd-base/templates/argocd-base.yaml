@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-base
+  namespace: argocd
+spec:
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: HEAD
+    path: argocd-base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  project: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

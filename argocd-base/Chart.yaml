@@ -1,0 +1,6 @@
+apiVersion: v2
+name: argocd-base
+description: A Helm chart for adding argocd secrets and apps of apps.
+
+version: 0.0.1
+appVersion: 0.0.1
