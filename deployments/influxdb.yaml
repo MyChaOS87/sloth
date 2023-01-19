@@ -38,6 +38,69 @@ spec:
         ingress:
           enabled: true
           hostname: influx.k8s.lan
+        setDefaultUser:
+          enabled: true
+        config:
+          http: 
+            auth-enabled: true
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: telegraf
+  namespace: argocd
+spec:
+  destination:
+    namespace: influxdb
+    server: https://kubernetes.default.svc
+  project: influxdb
+  source:
+    repoURL: https://helm.influxdata.com/
+    targetRevision: 1.8.24
+    chart: telegraf
+    helm:
+      parameters:
+        - name: tplVersion
+          value: "2"
+      values: |
+        image:
+          tag: "1.25"
+        service:
+          enabled: false
+        config:
+          agent:
+            debug: true
+          processors:
+          outputs:
+            - influxdb_v2:
+                urls:
+                  - "https://influx.k8s.lan"
+                token: "${INFLUX_TOKEN}"
+                organization: "influxdata"
+                bucket: "default"
+                insecure_skip_verify: true
+          inputs:
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.k8s.lan:1883"
+                topics: 
+                  - "shellies/+/relay/+/power"
+                  - "shellies/+/relay/+/energy"
+                data_format: "value"
+                data_type: "float"
+                topic_parsing:
+                  - topic: "shellies/+/relay/+/+"
+                    measurement: "_/_/_/_/measurement"
+                    tags: "_/shelly_id/_/relay_id/_"
+        env:
+          - name: INFLUX_TOKEN
+            valueFrom: 
+              secretKeyRef:
+                name: influxdb-influxdb2-auth
+                key: admin-token
   syncPolicy:
     syncOptions:
     - CreateNamespace=true
