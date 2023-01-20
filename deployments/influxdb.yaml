@@ -95,7 +95,20 @@ spec:
                   - topic: "shellies/+/relay/+/+"
                     measurement: "_/_/_/_/measurement"
                     tags: "_/shelly_id/_/relay_id/_"
-        env:
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.k8s.lan:1883"
+                topics: 
+                  - "warp2/22hg/meter/values"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "warp2/22hg/meter/values"
+                    tags: "_/wallbox_name/_/_"
+                json_v2:
+                  - field:
+                      - path: "power"
+                        type: "float"
+        env:        
           - name: INFLUX_TOKEN
             valueFrom: 
               secretKeyRef:
