@@ -87,14 +87,16 @@ spec:
                 servers:
                   - "tcp://mosquitto.k8s.lan:1883"
                 topics: 
-                  - "shellies/+/relay/+/power"
-                  - "shellies/+/relay/+/energy"
+                  - "shellies/+/+/+/power"
+                  - "shellies/+/+/+/energy"
+                  - "shellies/+/+/+/voltage"
+                  - "shellies/+/+/+/current"
                 data_format: "value"
                 data_type: "float"
                 topic_parsing:
-                  - topic: "shellies/+/relay/+/+"
+                  - topic: "shellies/+/+/+/+"
                     measurement: "_/_/_/_/measurement"
-                    tags: "_/shelly_id/_/relay_id/_"
+                    tags: "_/shelly_id/shelly_type/sub_id/_"
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.k8s.lan:1883"
@@ -105,7 +107,8 @@ spec:
                   - topic: "warp2/22hg/meter/values"
                     tags: "_/wallbox_name/_/_"
                 json_v2:
-                  - field:
+                  - measurement_name: "power"
+                    field:
                       - path: "power"
                         type: "float"
         env:        
