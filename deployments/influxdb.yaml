@@ -18,6 +18,27 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: influx-secrets
+  namespace: argocd
+spec:
+  destination:
+    namespace: influxdb
+    server: https://kubernetes.default.svc
+  project: influxdb
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: HEAD
+    path: deployments/influx-secrets
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: influxdb
   namespace: argocd
 spec:
@@ -117,6 +138,51 @@ spec:
               secretKeyRef:
                 name: influxdb-influxdb2-auth
                 key: admin-token
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+spec:
+  destination:
+    namespace: influxdb
+    server: https://kubernetes.default.svc
+  project: influxdb
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 6.50.1
+    chart: grafana
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          hosts: 
+          - grafana.k8s.lan
+        admin:
+          existingSecret: grafana-secret
+        datasources:
+          datatasources.yaml:
+            apiVersion: 1
+            datasources:
+            - name: InfluxDB
+              type: influxdb 
+              url: "https://influx.k8s.lan"
+              jsonData:
+                version: Flux
+                organization: "influxdata"
+                defaultBucket: default
+                tlsSkipVerify: true
+              secureJsonData: 
+                token: "$INFLUX_TOKEN"
+        envValueFrom:
+          INFLUX_TOKEN:
+            secretKeyRef:
+              name: influxdb-influxdb2-auth
+              key: admin-token
   syncPolicy:
     syncOptions:
     - CreateNamespace=true
