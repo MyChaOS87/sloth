@@ -50,16 +50,10 @@ spec:
               mountPath: /mosquitto/config/mosquitto.conf
               subPath: mosquitto.conf
               readOnly: true
-            - name: certs
-              readOnly: true
-              mountPath: /etc/mosquitto/certs/awsiot
       volumes:
         - name: config
           configMap:
             name: {{ include "mosquitto.fullname" . }}
-        - name: certs
-          secret:
-            secretName: awsiot-certificates
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

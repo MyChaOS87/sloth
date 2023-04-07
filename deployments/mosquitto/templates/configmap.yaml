@@ -11,17 +11,3 @@ data:
 
     log_dest stdout
     allow_anonymous true
-
-    connection awsiot
-    address a2r45j733id3jo-ats.iot.eu-central-1.amazonaws.com:8883
-    topic shellies/+/relay/+/power out 1
-    topic shellies/+/relay/+/energy out 1
-    bridge_insecure false
-    cleansession true
-    clientid bridgeawsiot
-    start_type automatic
-    notifications false
-    log_type all
-    bridge_cafile /etc/mosquitto/certs/awsiot/awsiot.ca.pem
-    bridge_certfile /etc/mosquitto/certs/awsiot/awsiot.cert.crt
-    bridge_keyfile /etc/mosquitto/certs/awsiot/awsiot.private.key
