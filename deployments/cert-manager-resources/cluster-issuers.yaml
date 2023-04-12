@@ -1,0 +1,39 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: lets-encrypt@vogelherdweg.de
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - dns01:
+        cloudDNS:
+          # The ID of the GCP project
+          project: vogelherd
+          # This is the secret used to access the service account
+          serviceAccountSecretRef:
+            name: gcloud-dns01-solver
+            key: gcloud-dns01-solver.key.json
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: lets-encrypt@vogelherdweg.de
+    privateKeySecretRef:
+      name: letsencrypt
+    solvers:
+    - dns01:
+        cloudDNS:
+          # The ID of the GCP project
+          project: vogelherd
+          # This is the secret used to access the service account
+          serviceAccountSecretRef:
+            name: gcloud-dns01-solver
+            key: gcloud-dns01-solver.key.json
