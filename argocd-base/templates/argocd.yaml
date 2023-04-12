@@ -17,9 +17,16 @@ spec:
             server.insecure: true  
         server:
           ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
             enabled: true
             hosts:
               - argocd.k8s.lan   
+              - argocd.internal.k8s.example.com
+            tls: 
+            - hosts: 
+              - argocd.internal.k8s.example.com
+              secretName: argocd-internal-k8s-example-com-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd 

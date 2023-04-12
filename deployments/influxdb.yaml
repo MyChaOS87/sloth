@@ -166,8 +166,15 @@ spec:
       values: |
         ingress:
           enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
           hosts: 
           - grafana.k8s.lan
+          - grafana.internal.k8s.example.com
+          tls: 
+          - hosts: 
+            - grafana.internal.k8s.example.com
+            secretName: grafana-internal-k8s-example-com-tls
         admin:
           existingSecret: grafana-secret
         datasources:
