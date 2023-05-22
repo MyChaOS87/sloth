@@ -57,10 +57,17 @@ spec:
           size: 5Gi
           storageClass: longhorn
         ingress:
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
           enabled: true
-          hostname: influx.k8s.lan
-        setDefaultUser:
-          enabled: true
+          hostname: influx.internal.k8s.vogelherdweg.de
+          tls: true
+          secretName: influx-internal-k8s-vogelherdweg-de-tls
+        adminUser:
+          organization: "influxdata"
+          bucket: "default"
+          user: "admin"
+          existingSecret: influx-secret
         config:
           http: 
             auth-enabled: true
@@ -98,7 +105,7 @@ spec:
           outputs:
             - influxdb_v2:
                 urls:
-                  - "https://influx.k8s.lan"
+                  - "https://influx.internal.k8s.vogelherdweg.de"
                 token: "${INFLUX_TOKEN}"
                 organization: "influxdata"
                 bucket: "default"
@@ -106,7 +113,7 @@ spec:
           inputs:
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.k8s.lan:1883"
+                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "shellies/+/+/+/power"
                   - "shellies/+/+/+/energy"
@@ -126,7 +133,7 @@ spec:
                     tags: "_/shelly_id/shelly_type/_"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.k8s.lan:1883"
+                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "warp2/22hg/meter/values"
                 data_format: "json_v2"
@@ -142,7 +149,7 @@ spec:
           - name: INFLUX_TOKEN
             valueFrom: 
               secretKeyRef:
-                name: influxdb-influxdb2-auth
+                name: influx-secret
                 key: admin-token
   syncPolicy:
     syncOptions:
@@ -183,18 +190,17 @@ spec:
             datasources:
             - name: InfluxDB
               type: influxdb 
-              url: "https://influx.k8s.lan"
+              url: "https://influx.internal.k8s.vogelherdweg.de"
               jsonData:
                 version: Flux
                 organization: "influxdata"
                 defaultBucket: default
-                tlsSkipVerify: true
               secureJsonData: 
                 token: "$INFLUX_TOKEN"
         envValueFrom:
           INFLUX_TOKEN:
             secretKeyRef:
-              name: influxdb-influxdb2-auth
+              name: influx-secret
               key: admin-token
   syncPolicy:
     syncOptions:
