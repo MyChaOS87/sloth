@@ -145,6 +145,36 @@ spec:
                     field:
                       - path: "power"
                         type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies_plus/+/status/temperature:0"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_plus/+/status/+"
+                    tags: "_/shelly_id/_/_"
+                json_v2:
+                  - measurement_name: "temperature"
+                    field:
+                      - path: "tC"
+                        rename: "temperature"
+                        type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies_plus/+/status/humidity:0"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_plus/+/status/+"
+                    tags: "_/shelly_id/_/_"
+                json_v2:
+                  - measurement_name: "humidity"
+                    field:
+                      - path: "rh"
+                        rename: "humidity"
+                        type: "float"  
         env:        
           - name: INFLUX_TOKEN
             valueFrom: 
