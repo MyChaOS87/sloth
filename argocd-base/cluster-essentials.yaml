@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-cluster-essentials
+  namespace: argocd
+spec:
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: cluster-essentials
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  project: argocd-base
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

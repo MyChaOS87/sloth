@@ -11,7 +11,7 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
-  project: argocd
+  project: argocd-base
   syncPolicy:
     automated:
       prune: true
@@ -20,7 +20,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: argocd
+  name: argocd-base
   namespace: argocd
 spec:
   description: Argocd Project

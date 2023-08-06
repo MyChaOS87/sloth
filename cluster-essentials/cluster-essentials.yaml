@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cluster-essentials
+  namespace: argocd
+spec:
+  description: access to the used namespaces for cluster essentials
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: sealed-secrets
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  orphanedResources:
+    warn: false

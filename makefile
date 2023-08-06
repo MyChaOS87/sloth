@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := argocd.install
 
-SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" argocd-base/sealed-secrets.yaml)
+SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" cluster-essentials/sealed-secrets.yaml)
 ARGOCDVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" argocd-base/argocd.yaml)
 
 .PHONY: checkPrerequisites.kubectl
@@ -33,14 +33,15 @@ sealed-secrets.seal.sshDeployKey: checkPrerequisites.kubeseal
 
 .PHONY: sealed-secrets.uninstall
 sealed-secrets.uninstall: checkPrerequisites.helm
-	helm uninstall sealed-secrets --namespace kube-system
+	helm uninstall sealed-secrets --namespace sealed-secrets
 
 .PHONY: argocd.install
 argocd.install: checkPrerequisites.helm checkPrerequisites.yq
 	helm repo add argo https://argoproj.github.io/argo-helm
 	yq -r ". | select(.kind == \"Application\") | .spec.source.helm.values" argocd-base/argocd.yaml > .argocd.values.yaml
 	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f .argocd.values.yaml argo/argo-cd
-	helm install argocd-base ./argocd-base --namespace argocd
+	kubectl create -f argocd-base/argocd-base.yaml               
+	kubectl create -f repository.sealed.json
 	rm .argocd.values.yaml
 
 .PHONY: argocd.password

@@ -14,7 +14,7 @@ data:
   admin-password: "$(pwgen -sc 24  1 | head -c -1 | base64)"
 EOF
 
-kubeseal --controller-namespace sealed-secrets > deployments/influx-secrets/influx-secret.sealed.json << EOF
+kubeseal --controller-namespace sealed-secrets> deployments/influx-secrets/influx-secret.sealed.json << EOF
 apiVersion: v1
 kind: Secret
 metadata:

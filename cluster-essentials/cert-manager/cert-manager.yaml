@@ -51,7 +51,7 @@ spec:
   source:
     repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: HEAD
-    path: deployments/cert-manager-resources
+    path: cluster-essentials/cert-manager/cert-manager-resources
   syncPolicy:
     syncOptions:
     - CreateNamespace=true
