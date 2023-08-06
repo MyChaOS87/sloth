@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 4.6.0
+    chart: metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  project: cluster-essentials
+  ignoreDifferences:
+  - group: "*"
+    kind: CustomResourceDefinition
+    name: bgppeers.metallb.io
+    jsonPointers:
+    - /spec/conversion/webhook/clientConfig/caBundle
+  - group: "*"
+    kind: CustomResourceDefinition
+    name: addresspools.metallb.io
+    jsonPointers:
+    - /spec/conversion/webhook/clientConfig/caBundle
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-config
+  namespace: argocd
+spec:
+  destination:
+    namespace: metallb-system
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: cluster-essentials/metallb-config
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
