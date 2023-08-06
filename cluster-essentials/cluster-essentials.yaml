@@ -9,6 +9,11 @@ kind: Namespace
 metadata:
   name: metallb-system
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traefik-system
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -22,6 +27,8 @@ spec:
   - namespace: sealed-secrets
     server: https://kubernetes.default.svc
   - namespace: metallb-system
+    server: https://kubernetes.default.svc  
+  - namespace: traefik-system
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
