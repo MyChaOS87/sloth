@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://helm.traefik.io/traefik
+    targetRevision: 23.2.0
+    chart: traefik
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik-system
+  project: cluster-essentials
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
