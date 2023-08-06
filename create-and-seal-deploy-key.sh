@@ -5,10 +5,10 @@ mkdir -p .secrets/.ssh/
 chmod 700 .secrets/.ssh/
 
 echo Creating new SSH Keypair ... 1>&2
-ssh-keygen -q -b4096 -N '' -t rsa -f .secrets/.ssh/id_rsa -C argocd@sloth
+ssh-keygen -q -b4096 -N '' -t rsa -f .secrets/.ssh/id_rsa -C argocd@$(kubectl config current-context)
 
 echo Sealing Private key into secret ... 1>&2
-kubeseal > argocd/argocd/templates/repository.sealed.json << EOF
+kubeseal --controller-namespace sealed-secrets > argocd-base/repository.sealed.json << EOF
 apiVersion: v1
 kind: Secret
 metadata:
