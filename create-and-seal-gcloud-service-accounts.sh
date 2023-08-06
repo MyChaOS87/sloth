@@ -7,6 +7,6 @@ set -e +x
 kubectl create secret generic gcloud-dns01-solver -n cert-manager \
    --dry-run=client --from-file=.secrets/gcloud-dns01-solver.key.json \
    -o json > .secrets/gcloud-dns01-solver.json
-kubeseal < .secrets/gcloud-dns01-solver.json > deployments/cert-manager-resources/gcloud-dns01-solver.sealed.json 
+kubeseal --controller-namespace sealed-secrets < .secrets/gcloud-dns01-solver.json > deployments/cert-manager-resources/gcloud-dns01-solver.sealed.json 
 
 echo Secrets are sealed 1>&2

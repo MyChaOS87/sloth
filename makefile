@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := argocd.install
 
-SEALEDSECRETSVERSION=$(shell yq ".spec.source.targetRevision" argocd-base/templates/sealed-secrets.yaml)
-ARGOCDVERSION=$(shell yq ".spec.source.targetRevision" argocd-base/templates/argocd.yaml)
+SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" argocd-base/sealed-secrets.yaml)
+ARGOCDVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" argocd-base/argocd.yaml)
 
 .PHONY: checkPrerequisites.kubectl
 checkPrerequisites.kubectl:
@@ -25,7 +25,7 @@ checkPrerequisites.all: checkPrerequisites.kubectl checkPrerequisites.helm check
 .PHONY: sealed-secrets.install
 sealed-secrets.install: checkPrerequisites.helm checkPrerequisites.yq 
 	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
-	helm install sealed-secrets --namespace kube-system --set-string fullnameOverride=sealed-secrets-controller --version $(SEALEDSECRETSVERSION) sealed-secrets/sealed-secrets
+	helm install sealed-secrets --namespace sealed-secrets --create-namespace --set-string fullnameOverride=sealed-secrets-controller --version $(SEALEDSECRETSVERSION) sealed-secrets/sealed-secrets
 
 .PHONY: sealed-secrets.seal.sshRepoKey
 sealed-secrets.seal.sshDeployKey: checkPrerequisites.kubeseal
@@ -38,7 +38,7 @@ sealed-secrets.uninstall: checkPrerequisites.helm
 .PHONY: argocd.install
 argocd.install: checkPrerequisites.helm checkPrerequisites.yq
 	helm repo add argo https://argoproj.github.io/argo-helm
-	yq -r .spec.source.helm.values argocd-base/templates/argocd.yaml > .argocd.values.yaml
+	yq -r ". | select(.kind == \"Application\") | .spec.source.helm.values" argocd-base/argocd.yaml > .argocd.values.yaml
 	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f .argocd.values.yaml argo/argo-cd
 	helm install argocd-base ./argocd-base --namespace argocd
 	rm .argocd.values.yaml

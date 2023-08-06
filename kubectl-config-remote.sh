@@ -1,13 +1,49 @@
 #!/bin/bash
 set -e +x
 
+Help()
+{
+    echo "USAGE:"
+    echo "$0 [-h] [-s <k8sHost>] [-c <cluster>] [-u <user>]"
+
+    echo "Retrieve k3s credentials and add it to your local kubectl config"
+    echo
+    echo "-h                Display this help"
+    echo "-s <k8sHost>      k8sHost to access for credentials (mandatory)"
+    echo "-u <user>         User for ssh connection to host (default: pi)"
+    echo "-c <cluster>      local clustername used for cluster, context and credetials in kube-config (default: sloth)"   
+}
+
 user=pi
 cluster=sloth
-credentials=sloth_root
-context=sloth-root
+
+while getopts ":hs:u:c:" option; do
+    case $option in
+        h) # display Help
+            Help
+            exit;;
+        s) # set host
+            k8sHost=$OPTARG
+            ;;
+        u) # set user
+            user=$OPTARG
+            ;;
+        c) # set cluster
+            cluster=$OPTARG
+            ;;
+        \?) # Invalid option
+            echo "Error: Invalid option"
+            Help
+            exit 2;;
+    esac
+done
+
+credentials=${cluster}_root
+context=${cluster}-root
 
 if [ -z "$k8sHost" ]; then
-    echo Environment variable \"k8sHost\" unset... no host to contact 1>&2
+    echo "\"k8sHost\" unset (use -s flag)... no host to contact" 1>&2
+    Help;
     exit 2;
 fi
 

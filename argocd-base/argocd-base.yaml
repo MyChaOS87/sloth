@@ -1,3 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-base
+  namespace: argocd
+spec:
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: argocd-base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  project: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -10,24 +28,6 @@ spec:
   - '*'
   destinations:
   - namespace: argocd
-    server: https://kubernetes.default.svc
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  orphanedResources:
-    warn: false
----
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: kube-system
-  namespace: argocd
-spec:
-  description: access to kube-system for sealed-secrets
-  sourceRepos:
-  - '*'
-  destinations:
-  - namespace: kube-system
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
