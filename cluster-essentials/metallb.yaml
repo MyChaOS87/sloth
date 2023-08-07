@@ -10,7 +10,7 @@ spec:
     chart: metallb
   destination:
     server: https://kubernetes.default.svc
-    namespace: metallb-system
+    namespace: metallb
   project: cluster-essentials
   ignoreDifferences:
   - group: "*"
@@ -37,7 +37,7 @@ metadata:
   namespace: argocd
 spec:
   destination:
-    namespace: metallb-system
+    namespace: metallb
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
