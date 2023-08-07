@@ -8,9 +8,15 @@ spec:
     repoURL: https://helm.traefik.io/traefik
     targetRevision: 23.2.0
     chart: traefik
+    helm:
+      values: |
+        providers:
+          kubernetesIngress:
+            publishedService:
+              enabled: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: traefik-system
+    namespace: traefik
   project: cluster-essentials
   syncPolicy:
     automated:

@@ -1,23 +1,4 @@
 apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: cert-manager
-  namespace: argocd
-spec:
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  destinations:
-  - namespace: cert-manager
-    server: https://kubernetes.default.svc
-  - namespace: kube-system
-    server: https://kubernetes.default.svc
-  orphanedResources:
-    warn: false
-  sourceRepos:
-  - '*'
----
-apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cert-manager
@@ -26,7 +7,7 @@ spec:
   destination:
     namespace: cert-manager
     server: https://kubernetes.default.svc
-  project: cert-manager
+  project: cluster-essentials
   source:
     repoURL: https://charts.jetstack.io
     targetRevision: 1.11.1
@@ -35,26 +16,25 @@ spec:
       values: |
         installCRDs: true
   syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cert-manager-resources
+  name: cert-manager-config
   namespace: argocd
 spec:
   destination:
     namespace: cert-manager
     server: https://kubernetes.default.svc
-  project: cert-manager
+  project: cluster-essentials
   source:
     repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: HEAD
-    path: cluster-essentials/cert-manager/cert-manager-resources
+    targetRevision: feature/rock5b
+    path: cluster-essentials/cert-manager-config
   syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
     automated:
       prune: true
       selfHeal: true
