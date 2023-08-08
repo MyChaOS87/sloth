@@ -23,11 +23,11 @@ I try to keep as much as possible hardware independent. Just skip the Hardware c
 It's a hobby project, so see [Disclaimer](#disclaimer).
 
 ### Planned additions (in no particular order):
-* longhorn:
-  * switch to a proper version not being on a RC... (Kubernetes 1.25 is not supported by any stable release yet)
-* More CM4 RPis (but those are hard to find these days)
+* LoadBalancing between k3s Nodes
+* PodDisruptionBudgets, multiple pods...
 * mosquitto authentication
 * SSO via keycloak
+* cluster/node monitoring
 * hardening security
 * making it more reusable - complete proper separation of values and templates(which currently are sometimes more plain yaml files and not templates), to pulling values into a different repository, so this could be universally used for bootstrapping any clusters with the base argocd stuff.
 * ...
