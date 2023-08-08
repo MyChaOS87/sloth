@@ -60,9 +60,9 @@ spec:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
           enabled: true
-          hostname: influx.internal.k8s.vogelherdweg.de
+          hostname: influx.cm4.k8s.vogelherdweg.de
           tls: true
-          secretName: influx-internal-k8s-vogelherdweg-de-tls
+          secretName: influx-cm4-k8s-vogelherdweg-de-tls
         adminUser:
           organization: "influxdata"
           bucket: "default"
@@ -105,7 +105,7 @@ spec:
           outputs:
             - influxdb_v2:
                 urls:
-                  - "https://influx.internal.k8s.vogelherdweg.de"
+                  - "https://influx.cm4.k8s.vogelherdweg.de"
                 token: "${INFLUX_TOKEN}"
                 organization: "influxdata"
                 bucket: "default"
@@ -113,7 +113,7 @@ spec:
           inputs:
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.cm4.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "shellies/+/+/+/power"
                   - "shellies/+/+/+/energy"
@@ -133,7 +133,7 @@ spec:
                     tags: "_/shelly_id/shelly_type/_"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.cm4.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "warp2/22hg/meter/values"
                 data_format: "json_v2"
@@ -147,7 +147,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.cm4.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "shellies_plus/+/status/temperature:0"
                 data_format: "json_v2"
@@ -162,7 +162,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.cm4.k8s.vogelherdweg.de:1883"
                 topics: 
                   - "shellies_plus/+/status/humidity:0"
                 data_format: "json_v2"
@@ -208,10 +208,12 @@ spec:
           hosts: 
           - grafana.k8s.lan
           - grafana.internal.k8s.vogelherdweg.de
+          - grafana.cm4.k8s.vogelherdweg.de
           tls: 
           - hosts: 
             - grafana.internal.k8s.vogelherdweg.de
-            secretName: grafana-internal-k8s-vogelherdweg-de-tls
+            - grafana.cm4.k8s.vogelherdweg.de
+            secretName: grafana-cm4-k8s-vogelherdweg-de-tls
         admin:
           existingSecret: grafana-secret
         datasources:
@@ -220,7 +222,7 @@ spec:
             datasources:
             - name: InfluxDB
               type: influxdb 
-              url: "https://influx.internal.k8s.vogelherdweg.de"
+              url: "https://influx.cm4.k8s.vogelherdweg.de"
               jsonData:
                 version: Flux
                 organization: "influxdata"

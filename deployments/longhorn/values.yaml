@@ -5,6 +5,6 @@ longhorn:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
     enabled: true
-    host: longhorn.internal.k8s.vogelherdweg.de
+    host: longhorn.cm4.k8s.vogelherdweg.de
     tls: true
-    tlsSecret: longhorn-internal-k8s-vogelherdweg-de-tls
+    tlsSecret: longhorn-cm4-k8s-vogelherdweg-de-tls
