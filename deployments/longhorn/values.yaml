@@ -5,6 +5,6 @@ longhorn:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
     enabled: true
-    host: longhorn.internal.k8s.example.com
+    host: longhorn.cm4.k8s.example.com
     tls: true
-    tlsSecret: longhorn-internal-k8s-example-com-tls
+    tlsSecret: longhorn-cm4-k8s-example-com-tls
