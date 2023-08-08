@@ -83,8 +83,8 @@ sudo apt update && sudo apt upgrade
 # Create partition 
 (echo g; echo n; echo 1; echo ""; echo ""; echo w) | sudo fdisk /dev/nvme0n1
 ```
-> [!WARNING] 
-> **If you are using mobile browser**: Be very careful here!
+> [!IMPORTANT] 
+> **Longhorn compatibility!**: Probably already a good idea to carve out space for a longhorn partition here. At the time of writing longhorn has no support for btrfs. So probably carving out space here, or using ext4 instead of btrfs in the next step is a good idea. If you miss it like me, there is a guide in [Longhorn Preparation](#longhorn-preparation) on how to shrink and prepare it.
 
 * run `armbian-install`, choose: 
   * 1 -Boot from SD - System on NVME
@@ -133,6 +133,54 @@ curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.3.2/scripts/en
 ### create folder for data disk:
 sudo mkdir -p /var/lib/longhorn/disk0/ #and depending on your desired config mount another disk there
 ```
+>[!WARNING]
+> Longhorn **doesn't support** btrfs at the time of writing. So if you like me missed that wen creating your full disk *btrfs* partition :skull: and want to use that for longhorn, you *should* change that asap, best before running anything, or best start over with deploying everything with the right partitions already. 
+>I took the following steps to fix it after already having already some stuff deployed (risk assessment felt fine :feelsgood:, in my case! - Really, start over with a fresh system as long as you can!):
+> * :exclamation:DISCLAIMER:exclamation:: Potential full data-loss possible, Use at your own risk. Double check what you are doing.
+> * Drain the node from K8s: 
+> ```bash
+> kubectl drain --delete-emptydir-data --ignore-daemonsets <NODE>
+> ```
+> * Stop K8s on the node completely: 
+> ```bash
+> k3s-killall.sh
+> ```
+> * resize `/` partition - (this should be done *offline & unmounted*, but as we are already on the risk path IDGAF :godmode:): 
+>```bash
+>sudo parted /dev/nvme0n1 resizepart 1 100G
+>```
+> * recheck your btrfs :innocent::
+>```
+>btrfs check --force /dev/nvme0n1p1
+>```
+> * create new partition and create ext4 fs on it:
+>```
+>(echo n; echo 2; echo ""; echo ""; echo w) | sudo fdisk /dev/nvme0n1
+>sudo mkfs.ext4 /dev/nvme0n1p2
+>```
+> * (optional) purge all longhorn stuff - in my case everything is unused here
+>```
+>sudo rm -rf /var/lib/longhorn
+>sudo mkdir -p /var/lib/longhorn/disk0/
+>```
+> * mount your new partition
+>```
+>echo $(blkid /dev/nvme0n1p2 | cut -d\  -f2 | sed "s/\"//g")"\t"/var/lib/longhorn/disk0"\t"ext4"\t"defaults,noatime,commit=600,errors=remount-ro,x-gvfs-hide"\t"0"\t"1 | sudo tee -a /etc/fstab
+>sudo mount -a
+>mount | grep nvme0n1p2
+>```
+> * restart k3s
+> ```
+> sudo systemctl start k3s.service
+>```
+> * uncordon node
+>```
+> kubectl uncordon <NODE>
+>```
+> * disable scheduling for disk and delete disk in longhorn-ui, it will get recreated
+> 
+>  ---
+
 
 
 ### Access k3s from remote (skip if you run everything from the k3s server)
