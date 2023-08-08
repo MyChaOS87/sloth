@@ -10,6 +10,6 @@ spec:
       path: /var/lib/longhorn/disk0/
       allowScheduling: true
       evictionRequested: false
-      storageReserved: 107374182400
+      storageReserved: 53687091200
   evictionRequested: false
   name: rock5b-but
