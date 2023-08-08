@@ -1,0 +1,15 @@
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: rock5b-coffee
+  namespace: longhorn
+spec:
+  allowScheduling: true
+  disks:
+    disk-0:
+      path: /var/lib/longhorn/disk0/
+      allowScheduling: true
+      evictionRequested: false
+      storageReserved: 107374182400
+  evictionRequested: false
+  name: rock5b-coffee
