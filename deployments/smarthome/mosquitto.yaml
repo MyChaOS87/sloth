@@ -1,21 +1,4 @@
 apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: mosquitto
-  namespace: argocd
-spec:
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  destinations:
-  - namespace: mosquitto
-    server: https://kubernetes.default.svc
-  orphanedResources:
-    warn: false
-  sourceRepos:
-  - '*'
----
-apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: mosquitto
@@ -24,15 +7,19 @@ spec:
   destination:
     namespace: mosquitto
     server: https://kubernetes.default.svc
-  project: mosquitto
+  project: smarthome
   source:
     repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: HEAD
-    path: deployments/mosquitto
+    targetRevision: feature/rock5b
+    path: deployments/smarthome/mosquitto
     helm:
       values: |
         service:
+          annotations:
+            metallb.universe.tf/loadBalancerIPs: 192.168.1.30
+            external-dns.alpha.kubernetes.io/hostname: mosquitto.rock.k8s.vogelherdweg.de.
           type: LoadBalancer
-  syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true

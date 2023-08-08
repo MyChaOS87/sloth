@@ -1,42 +1,4 @@
 apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: influxdb
-  namespace: argocd
-spec:
-  clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  destinations:
-  - namespace: influxdb
-    server: https://kubernetes.default.svc
-  orphanedResources:
-    warn: false
-  sourceRepos:
-  - '*'
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: influx-secrets
-  namespace: argocd
-spec:
-  destination:
-    namespace: influxdb
-    server: https://kubernetes.default.svc
-  project: influxdb
-  source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: HEAD
-    path: deployments/influx-secrets
-  syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
-    automated:
-      prune: true
-      selfHeal: true
----
-apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: influxdb
@@ -45,9 +7,9 @@ spec:
   destination:
     namespace: influxdb
     server: https://kubernetes.default.svc
-  project: influxdb
-  source:
-    repoURL: https://helm.influxdata.com/
+  project: smarthome
+  sources:
+  - repoURL: https://helm.influxdata.com/
     targetRevision: 2.1.1
     chart: influxdb2
     helm:
@@ -60,178 +22,21 @@ spec:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
           enabled: true
-          hostname: influx.internal.k8s.vogelherdweg.de
+          hostname: influx.rock.k8s.vogelherdweg.de
           tls: true
-          secretName: influx-internal-k8s-vogelherdweg-de-tls
+          secretName: influx-rock-k8s-vogelherdweg-de-tls
         adminUser:
           organization: "influxdata"
           bucket: "default"
           user: "admin"
-          existingSecret: influx-secret
+          existingSecret: influxdb-secret
         config:
           http: 
             auth-enabled: true
-  syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: telegraf
-  namespace: argocd
-spec:
-  destination:
-    namespace: influxdb
-    server: https://kubernetes.default.svc
-  project: influxdb
-  source:
-    repoURL: https://helm.influxdata.com/
-    targetRevision: 1.8.24
-    chart: telegraf
-    helm:
-      parameters:
-        - name: tplVersion
-          value: "2"
-      values: |
-        image:
-          tag: "1.25"
-        service:
-          enabled: false
-        config:
-          agent:
-            debug: true
-          processors:
-          outputs:
-            - influxdb_v2:
-                urls:
-                  - "https://influx.internal.k8s.vogelherdweg.de"
-                token: "${INFLUX_TOKEN}"
-                organization: "influxdata"
-                bucket: "default"
-                insecure_skip_verify: true
-          inputs:
-            - mqtt_consumer:
-                servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
-                topics: 
-                  - "shellies/+/+/+/power"
-                  - "shellies/+/+/+/energy"
-                  - "shellies/+/+/+/voltage"
-                  - "shellies/+/+/+/current"
-                  - "shellies/+/sensor/temperature"
-                  - "shellies/+/sensor/humidity"
-                  - "shellies/+/sensor/battery"
-                data_format: "value"
-                data_type: "float"
-                topic_parsing:
-                  - topic: "shellies/+/+/+/+"
-                    measurement: "_/_/_/_/measurement"
-                    tags: "_/shelly_id/shelly_type/sub_id/_"
-                  - topic: "shellies/+/sensor/+"
-                    measurement: "_/_/_/measurement"
-                    tags: "_/shelly_id/shelly_type/_"
-            - mqtt_consumer:
-                servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
-                topics: 
-                  - "warp2/22hg/meter/values"
-                data_format: "json_v2"
-                topic_parsing:
-                  - topic: "warp2/22hg/meter/values"
-                    tags: "_/wallbox_name/_/_"
-                json_v2:
-                  - measurement_name: "power"
-                    field:
-                      - path: "power"
-                        type: "float"
-            - mqtt_consumer:
-                servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
-                topics: 
-                  - "shellies_plus/+/status/temperature:0"
-                data_format: "json_v2"
-                topic_parsing:
-                  - topic: "shellies_plus/+/status/+"
-                    tags: "_/shelly_id/_/_"
-                json_v2:
-                  - measurement_name: "temperature"
-                    field:
-                      - path: "tC"
-                        rename: "temperature"
-                        type: "float"
-            - mqtt_consumer:
-                servers:
-                  - "tcp://mosquitto.internal.k8s.vogelherdweg.de:1883"
-                topics: 
-                  - "shellies_plus/+/status/humidity:0"
-                data_format: "json_v2"
-                topic_parsing:
-                  - topic: "shellies_plus/+/status/+"
-                    tags: "_/shelly_id/_/_"
-                json_v2:
-                  - measurement_name: "humidity"
-                    field:
-                      - path: "rh"
-                        rename: "humidity"
-                        type: "float"  
-        env:        
-          - name: INFLUX_TOKEN
-            valueFrom: 
-              secretKeyRef:
-                name: influx-secret
-                key: admin-token
-  syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: grafana
-  namespace: argocd
-spec:
-  destination:
-    namespace: influxdb
-    server: https://kubernetes.default.svc
-  project: influxdb
-  source:
-    repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 6.50.1
-    chart: grafana
-    helm:
-      values: |
-        ingress:
-          enabled: true
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt
-          hosts: 
-          - grafana.k8s.lan
-          - grafana.internal.k8s.vogelherdweg.de
-          tls: 
-          - hosts: 
-            - grafana.internal.k8s.vogelherdweg.de
-            secretName: grafana-internal-k8s-vogelherdweg-de-tls
-        admin:
-          existingSecret: grafana-secret
-        datasources:
-          datatasources.yaml:
-            apiVersion: 1
-            datasources:
-            - name: InfluxDB
-              type: influxdb 
-              url: "https://influx.internal.k8s.vogelherdweg.de"
-              jsonData:
-                version: Flux
-                organization: "influxdata"
-                defaultBucket: default
-              secureJsonData: 
-                token: "$INFLUX_TOKEN"
-        envValueFrom:
-          INFLUX_TOKEN:
-            secretKeyRef:
-              name: influx-secret
-              key: admin-token
-  syncPolicy:
-    syncOptions:
-    - CreateNamespace=true
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: deployments/smarthome/influxdb-secrets
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true

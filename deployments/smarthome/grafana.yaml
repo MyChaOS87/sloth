@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+spec:
+  destination:
+    namespace: grafana
+    server: https://kubernetes.default.svc
+  project: smarthome
+  sources:
+  - repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 6.58.7
+    chart: grafana
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+          hosts: 
+          - grafana.k8s.lan
+          - grafana.rock.k8s.vogelherdweg.de
+          tls: 
+          - hosts: 
+            - grafana.rock.k8s.vogelherdweg.de
+            secretName: grafana-rock-k8s-vogelherdweg-de-tls
+        admin:
+          existingSecret: grafana-secret
+        datasources:
+          datatasources.yaml:
+            apiVersion: 1
+            datasources:
+            - name: InfluxDB
+              type: influxdb 
+              url: "https://influx.rock.k8s.vogelherdweg.de"
+              jsonData:
+                version: Flux
+                organization: "influxdata"
+                defaultBucket: default
+              secureJsonData: 
+                token: "$INFLUX_TOKEN"
+        envValueFrom:
+          INFLUX_TOKEN:
+            secretKeyRef:
+              name: influxdb-secret
+              key: admin-token
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: deployments/smarthome/grafana-secrets
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: deployments/smarthome/influxdb-secrets
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true

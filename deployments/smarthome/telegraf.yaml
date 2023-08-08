@@ -1,0 +1,111 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: telegraf
+  namespace: argocd
+spec:
+  destination:
+    namespace: telegraf
+    server: https://kubernetes.default.svc
+  project: smarthome
+  sources:
+  - repoURL: https://helm.influxdata.com/
+    targetRevision: 1.8.30
+    chart: telegraf
+    helm:
+      parameters:
+        - name: tplVersion
+          value: "2"
+      values: |
+        service:
+          enabled: false
+        config:
+          agent:
+            debug: true
+          processors:
+          outputs:
+            - influxdb_v2:
+                urls:
+                  - "https://influx.rock.k8s.vogelherdweg.de"
+                token: "${INFLUX_TOKEN}"
+                organization: "influxdata"
+                bucket: "default"
+                insecure_skip_verify: true
+          inputs:
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies/+/+/+/power"
+                  - "shellies/+/+/+/energy"
+                  - "shellies/+/+/+/voltage"
+                  - "shellies/+/+/+/current"
+                  - "shellies/+/sensor/temperature"
+                  - "shellies/+/sensor/humidity"
+                  - "shellies/+/sensor/battery"
+                data_format: "value"
+                data_type: "float"
+                topic_parsing:
+                  - topic: "shellies/+/+/+/+"
+                    measurement: "_/_/_/_/measurement"
+                    tags: "_/shelly_id/shelly_type/sub_id/_"
+                  - topic: "shellies/+/sensor/+"
+                    measurement: "_/_/_/measurement"
+                    tags: "_/shelly_id/shelly_type/_"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "warp2/22hg/meter/values"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "warp2/22hg/meter/values"
+                    tags: "_/wallbox_name/_/_"
+                json_v2:
+                  - measurement_name: "power"
+                    field:
+                      - path: "power"
+                        type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies_plus/+/status/temperature:0"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_plus/+/status/+"
+                    tags: "_/shelly_id/_/_"
+                json_v2:
+                  - measurement_name: "temperature"
+                    field:
+                      - path: "tC"
+                        rename: "temperature"
+                        type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies_plus/+/status/humidity:0"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_plus/+/status/+"
+                    tags: "_/shelly_id/_/_"
+                json_v2:
+                  - measurement_name: "humidity"
+                    field:
+                      - path: "rh"
+                        rename: "humidity"
+                        type: "float"  
+        env:        
+          - name: INFLUX_TOKEN
+            valueFrom: 
+              secretKeyRef:
+                name: influxdb-secret
+                key: admin-token
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: deployments/smarthome/influxdb-secrets
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true
