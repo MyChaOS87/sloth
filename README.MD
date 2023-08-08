@@ -83,6 +83,9 @@ sudo apt update && sudo apt upgrade
 # Create partition 
 (echo g; echo n; echo 1; echo ""; echo ""; echo w) | sudo fdisk /dev/nvme0n1
 ```
+> [!WARNING] 
+> **If you are using mobile browser**: Be very careful here!
+
 * run `armbian-install`, choose: 
   * 1 -Boot from SD - System on NVME
   * 2 - /dev/nvme0n1p1

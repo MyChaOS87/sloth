@@ -1,8 +1,8 @@
 apiVersion: longhorn.io/v1beta2
 kind: Node
 metadata:
-  name: cm4-01
-  namespace: longhorn-system
+  name: rock5b-first
+  namespace: longhorn
 spec:
   allowScheduling: true
   disks:
@@ -10,6 +10,6 @@ spec:
       path: /var/lib/longhorn/disk0/
       allowScheduling: true
       evictionRequested: false
-      storageReserved: 10737418240
+      storageReserved: 107374182400
   evictionRequested: false
-  name: cm4-01
+  name: rock5b-first

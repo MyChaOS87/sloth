@@ -24,6 +24,11 @@ kind: Namespace
 metadata:
   name: external-dns
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -43,6 +48,8 @@ spec:
   - namespace: cert-manager
     server: https://kubernetes.default.svc
   - namespace: external-dns
+    server: https://kubernetes.default.svc
+  - namespace: longhorn
     server: https://kubernetes.default.svc
   - namespace: kube-system
     server: https://kubernetes.default.svc

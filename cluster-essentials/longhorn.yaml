@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://charts.longhorn.io
+    targetRevision: 1.5.1
+    chart: longhorn
+    helm:
+      values: |
+        defaultSettings:
+          createDefaultDiskLabeledNodes: true
+        ingress:
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+          enabled: true
+          host: longhorn.rock.k8s.vogelherdweg.de
+          tls: true
+          tlsSecret: longhorn-rock-k8s-vogelherdweg-de-tls
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn
+  project: cluster-essentials
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-config
+  namespace: argocd
+spec:
+  destination:
+    namespace: longhorn
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: feature/rock5b
+    path: cluster-essentials/longhorn-config
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
