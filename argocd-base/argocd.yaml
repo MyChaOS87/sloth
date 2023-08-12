@@ -23,9 +23,11 @@ spec:
             hosts:
               - argocd-rock.k8s.lan   
               - argocd.rock.k8s.example.com
+              - argocd.internal.k8s.example.com
             tls: 
             - hosts: 
               - argocd.rock.k8s.example.com
+              - argocd.internal.k8s.example.com
               secretName: argocd-rock-k8s-example-com-tls
   destination:
     server: https://kubernetes.default.svc

@@ -21,9 +21,11 @@ spec:
           hosts: 
           - grafana.k8s.lan
           - grafana.rock.k8s.example.com
+          - grafana.internal.k8s.example.com
           tls: 
           - hosts: 
             - grafana.rock.k8s.example.com
+            - grafana.internal.k8s.example.com
             secretName: grafana-rock-k8s-example-com-tls
         admin:
           existingSecret: grafana-secret
