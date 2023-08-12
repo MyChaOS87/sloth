@@ -47,6 +47,24 @@ spec:
             secretKeyRef:
               name: influxdb-secret
               key: admin-token
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+            - name: 'default'
+              orgId: 1
+              folder: ''
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+        dashboards:
+          default:
+            environment:
+              url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Environment.json
+            power:
+              url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Power.json
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: feature/rock5b
     path: deployments/smarthome/grafana-secrets
