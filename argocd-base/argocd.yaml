@@ -23,9 +23,11 @@ spec:
             hosts:
               - argocd-rock.k8s.lan   
               - argocd.rock.k8s.vogelherdweg.de
+              - argocd.internal.k8s.vogelherdweg.de
             tls: 
             - hosts: 
               - argocd.rock.k8s.vogelherdweg.de
+              - argocd.internal.k8s.vogelherdweg.de
               secretName: argocd-rock-k8s-vogelherdweg-de-tls
   destination:
     server: https://kubernetes.default.svc

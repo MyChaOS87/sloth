@@ -21,9 +21,11 @@ spec:
           hosts: 
           - grafana.k8s.lan
           - grafana.rock.k8s.vogelherdweg.de
+          - grafana.internal.k8s.vogelherdweg.de
           tls: 
           - hosts: 
             - grafana.rock.k8s.vogelherdweg.de
+            - grafana.internal.k8s.vogelherdweg.de
             secretName: grafana-rock-k8s-vogelherdweg-de-tls
         admin:
           existingSecret: grafana-secret
