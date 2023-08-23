@@ -96,6 +96,83 @@ spec:
                       - path: "rh"
                         rename: "humidity"
                         type: "float"  
+            - modbus:
+                name: "pluggit_modbus"
+                slave_id: 1
+                timeout: "1s"
+                controller: "tcp://192.168.1.19:502"
+                configuration_type: "register"
+                holding_registers: 
+                - name: "CurrentBLState"
+                  byte_order: "CDAB"
+                  data_type: "UINT32"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 472
+                    - 473
+                - name: "RamIdxT1"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 132
+                    - 133
+                - name: "RamIdxT2"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 134
+                    - 135 
+                - name: "RamIdxT3"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 136
+                    - 137
+                - name: "RamIdxT4"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 138
+                    - 139
+                - name: "RomIdxSpeedLevel"
+                  byte_order: "CDAB"
+                  data_type: "UINT32"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 324
+                    - 325
+                - name: "HALTaho1"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 100
+                    - 101
+                - name: "HALTaho2"
+                  byte_order: "CDAB"
+                  data_type: "FLOAT32-IEEE"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 102
+                    - 103
+                - name: "RamIdxBypassActualState"
+                  byte_order: "CDAB"
+                  data_type: "UINT32"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 198
+                    - 199
+                - name: "VOC"
+                  byte_order: "CDAB"
+                  data_type: "UINT32"
+                  scale: !!float 1.0000001
+                  address: 
+                    - 430
+                    - 431        
         env:        
           - name: INFLUX_TOKEN
             valueFrom: 
