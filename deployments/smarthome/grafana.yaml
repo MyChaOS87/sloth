@@ -10,7 +10,7 @@ spec:
   project: smarthome
   sources:
   - repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 6.58.7
+    targetRevision: 7.0.11
     chart: grafana
     helm:
       values: |

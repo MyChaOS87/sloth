@@ -10,7 +10,7 @@ spec:
   project: smarthome
   sources:
   - repoURL: https://helm.influxdata.com/
-    targetRevision: 1.8.30
+    targetRevision: 1.8.38
     chart: telegraf
     helm:
       parameters:

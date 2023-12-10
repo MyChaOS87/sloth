@@ -10,7 +10,7 @@ spec:
   project: smarthome
   sources:
   - repoURL: https://helm.influxdata.com/
-    targetRevision: 2.1.1
+    targetRevision: 2.1.2
     chart: influxdb2
     helm:
       values: |
