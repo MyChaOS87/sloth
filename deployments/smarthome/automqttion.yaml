@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: automqttion
+  namespace: argocd
+spec:
+  destination:
+    namespace: automqttion
+    server: https://kubernetes.default.svc
+  project: smarthome
+  sources:
+  - repoURL: https://mychaos87.github.io/automqttion
+    targetRevision: 0.0.2
+    chart: automqttion

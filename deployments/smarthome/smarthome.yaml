@@ -18,6 +18,11 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: telegraf
+--- 
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: automqttion
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -36,6 +41,8 @@ spec:
   - namespace: mosquitto
     server: https://kubernetes.default.svc
   - namespace: telegraf
+    server: https://kubernetes.default.svc
+  - namespace: automqttion
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
