@@ -21,6 +21,8 @@ spec:
           serviceAccountSecretKey: "gcloud-external-dns.key.json"
         # domainFilters:
         # - rock.k8s.vogelherdweg.de
+        podAnnotations:
+          use-metadata.version-checker.io/external-dns: "true"
   syncPolicy:
     automated:
       prune: true
