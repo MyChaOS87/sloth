@@ -32,6 +32,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: prometheus
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: version-checker
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -59,6 +64,8 @@ spec:
   - namespace: kube-system
     server: https://kubernetes.default.svc
   - namespace: version-checker
+    server: https://kubernetes.default.svc
+  - namespace: prometheus
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'

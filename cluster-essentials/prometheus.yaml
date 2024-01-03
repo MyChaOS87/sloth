@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  destination:
+    namespace: prometheus
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 25.8.2
+    chart: prometheus
+    helm:
+      values: |
+        server:
+          ingress:
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+            enabled: true
+            hosts: 
+              - prometheus.internal.k8s.vogelherdweg.de
+              - prometheus.rock.k8s.vogelherdweg.de
+            tls: 
+              - secretName: prometheus-rock-k8s-vogelherdweg-de-tls
+                hosts: 
+                  - prometheus.internal.k8s.vogelherdweg.de
+                  - prometheus.rock.k8s.vogelherdweg.de
+          persistentVolume:
+            enabled: true
+            size: 5Gi
+            storageClass: longhorn
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
