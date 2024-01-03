@@ -10,7 +10,7 @@ spec:
   project: cluster-essentials
   source:
     repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 6.22.0
+    targetRevision: 6.28.6
     chart: external-dns
     helm:
       values: |
