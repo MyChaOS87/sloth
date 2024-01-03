@@ -29,6 +29,11 @@ kind: Namespace
 metadata:
   name: longhorn
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: version-checker
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -52,6 +57,8 @@ spec:
   - namespace: longhorn
     server: https://kubernetes.default.svc
   - namespace: kube-system
+    server: https://kubernetes.default.svc
+  - namespace: version-checker
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
