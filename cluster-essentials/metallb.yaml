@@ -13,6 +13,11 @@ spec:
         speaker:
           secretName: memberlist
           secretKey: secretkey
+          podAnnotations:
+            use-metadata.version-checker.io/metallb-speaker: "true"
+        controller:
+          podAnnotations:
+            use-metadata.version-checker.io/metallb-controller: "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb
