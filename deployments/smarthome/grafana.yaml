@@ -42,6 +42,9 @@ spec:
                 defaultBucket: default
               secureJsonData: 
                 token: "$INFLUX_TOKEN"
+            - name: Prometheus
+              type: prometheus
+              url: 'https://prometheus.internal.k8s.vogelherdweg.de'
         envValueFrom:
           INFLUX_TOKEN:
             secretKeyRef:
@@ -65,6 +68,18 @@ spec:
               url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Environment.json
             power:
               url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Power.json
+            prometheus-stats:
+              gnetId: 15489
+              datasource: Prometheus
+            version-checker:
+              gnetId: 12833
+              datasource: Prometheus
+            kubernetes-cluster:
+              gnetId: 315
+              datasource: Prometheus
+            influxdb-stats:
+              gnetId: 421
+              datasource: InfluxDB
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: feature/rock5b
     path: deployments/smarthome/grafana-secrets
