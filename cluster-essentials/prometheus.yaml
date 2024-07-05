@@ -29,7 +29,7 @@ spec:
                   - prometheus.rock.k8s.vogelherdweg.de
           persistentVolume:
             enabled: true
-            size: 5Gi
+            size: 100Gi
             storageClass: longhorn
   syncPolicy:
     automated:
