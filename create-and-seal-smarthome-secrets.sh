@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e +x
 
+source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
+
+check kubeseal pwgen head base64
+
 echo -n create grafana secret... 1>&2
 kubeseal --controller-namespace sealed-secrets > deployments/smarthome/grafana-secrets/grafana-secret.sealed.json << EOF
 apiVersion: v1

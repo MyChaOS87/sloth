@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+spec:
+  destination:
+    namespace: keycloak-oidc
+    server: https://kubernetes.default.svc
+  project: oidc
+  sources:
+  - repoURL: https://codecentric.github.io/helm-charts
+    targetRevision: 2.4.3
+    chart: keycloakx
+    helm:
+      values: |
+        command:
+            - "/opt/keycloak/bin/kc.sh"
+            - "--verbose"
+            - "start"
+            - "--http-port=8080"
+            - "--hostname-strict=false"
+        extraEnv: |
+          - name: KEYCLOAK_ADMIN
+            value: "admin"
+          - name: KEYCLOAK_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-admin-secret
+                key: admin-password
+          - name: KC_PROXY_HEADERS
+            value: "xforwarded"
+          - name: JAVA_OPTS_APPEND
+            value: >-
+              -XX:MaxRAMPercentage=50.0
+              -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+          rules:
+            - host: "sso.internal.k8s.vogelherdweg.de"
+              paths:
+              - path: /
+                pathType: Prefix
+          tls:
+            - secretName: tls-secret
+              hosts:
+                - "sso.internal.k8s.vogelherdweg.de"
+        http:
+          relativePath: "/"
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: deployments/oidc/keycloak-secrets

@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e +x
 
+source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
+
+check kubeseal ssh-keygen kubectl
+
 mkdir -p .secrets/.ssh/
 chmod 700 .secrets/.ssh/
 

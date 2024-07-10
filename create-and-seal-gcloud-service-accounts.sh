@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e +x
 
+source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
+
+check kubeseal gcloud kubectl
+
 [ ! -f .secrets/gcloud-dns01-solver.key.json ] && gcloud iam service-accounts keys create .secrets/gcloud-dns01-solver.key.json \
    --iam-account dns01-solver@vogelherd.iam.gserviceaccount.com
 
