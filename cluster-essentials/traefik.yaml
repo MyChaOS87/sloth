@@ -16,6 +16,10 @@ spec:
               enabled: true
         podAnnotations:
           pin-major.version-checker.io/traefik: 2
+        ports:
+          web:
+            redirectTo: 
+              port: websecure
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
