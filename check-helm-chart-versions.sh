@@ -25,7 +25,10 @@ function versioncheck() {
     # Remove the temporary repository
     helm repo remove temp-repo > /dev/null 2>&1
 
-    if [[ "$latestVersion" != "$version" ]]; then
+    # Remove leading 'v' if it exists
+    latestVersion=${latestVersion#v}
+
+    if [[ "${latestVersion#v}" != "$version" ]]; then
         echo -e "${RED}Outdated${NC}: $app ($repoURL $chart): ${RED}$version${NC} [$latestVersion]"
     else
         echo -e "${GREEN}OK${NC}: $app ($repoURL $chart): ${GREEN}$version${NC}"
