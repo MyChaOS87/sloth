@@ -10,7 +10,7 @@ spec:
   project: smarthome
   source:
     repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: deployments/smarthome/mosquitto
     helm:
       values: |
