@@ -10,7 +10,7 @@ spec:
   project: cluster-essentials
   source:
     repoURL: https://charts.jetstack.io
-    targetRevision: 1.13.3
+    targetRevision: 1.15.1
     chart: cert-manager
     helm:
       values: |
