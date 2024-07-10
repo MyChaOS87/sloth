@@ -80,6 +80,25 @@ spec:
             influxdb-stats:
               gnetId: 421
               datasource: InfluxDB
+        grafana.ini:
+          server:
+            domain: grafana.internal.k8s.vogelherdweg.de
+            root_url: https://grafana.internal.k8s.vogelherdweg.de
+          auth.generic_oauth:
+            enabled: true
+            name: Keycloak
+            allow_sign_up: true
+            client_id: grafana
+            client_secret: qbVzSjh8wjkUJ09HXmVVwcRIpzFaGljX
+            scopes: openid email profile offline_access roles
+            email_attribute_path: email
+            login_attribute_path: username
+            name_attribute_path: full_name
+            auth_url: https://sso.internal.k8s.vogelherdweg.de/realms/vogelherdweg/protocol/openid-connect/auth
+            token_url: https://sso.internal.k8s.vogelherdweg.de/realms/vogelherdweg/protocol/openid-connect/token
+            api_url: https://sso.internal.k8s.vogelherdweg.de/realms/vogelherdweg/protocol/openid-connect/userinfo
+            role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || 'Viewer'
+            role_attribute_strict: true
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/grafana-secrets
