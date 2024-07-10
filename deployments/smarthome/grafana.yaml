@@ -81,10 +81,10 @@ spec:
               gnetId: 421
               datasource: InfluxDB
   - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: deployments/smarthome/grafana-secrets
   - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: deployments/smarthome/influxdb-secrets
   # syncPolicy:
   #   automated:

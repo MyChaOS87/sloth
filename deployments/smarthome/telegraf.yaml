@@ -180,7 +180,7 @@ spec:
                 name: influxdb-secret
                 key: admin-token
   - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: deployments/smarthome/influxdb-secrets
   # syncPolicy:
   #   automated:

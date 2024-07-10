@@ -34,7 +34,7 @@ spec:
           http: 
             auth-enabled: true
   - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: deployments/smarthome/influxdb-secrets
   # syncPolicy:
   #   automated:
