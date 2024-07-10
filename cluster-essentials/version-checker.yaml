@@ -10,7 +10,7 @@ spec:
   project: cluster-essentials
   source:
     repoURL: https://charts.jetstack.io
-    targetRevision: 0.3.3
+    targetRevision: 0.7.0
     chart: version-checker
   syncPolicy:
     automated:
