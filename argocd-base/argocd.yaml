@@ -6,7 +6,7 @@ metadata:
 spec:
   source:
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 5.42.2
+    targetRevision: 7.3.4
     chart: argo-cd
     helm:
       values: |
@@ -20,15 +20,15 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
             enabled: true
-            hosts:
-              - argocd-rock.k8s.lan   
-              - argocd.rock.k8s.vogelherdweg.de
-              - argocd.internal.k8s.vogelherdweg.de
-            tls: 
-            - hosts: 
-              - argocd.rock.k8s.vogelherdweg.de
-              - argocd.internal.k8s.vogelherdweg.de
-              secretName: argocd-rock-k8s-vogelherdweg-de-tls
+            hostname: argocd.internal.k8s.vogelherdweg.de
+            extraHosts:
+              - name: argocd.rock.k8s.vogelherdweg.de
+            tls: true
+            extraTls: 
+              - hosts: 
+                - argocd.internal.k8s.vogelherdweg.de
+                - argocd.rock.k8s.vogelherdweg.de
+                secretName: argocd-rock-k8s-vogelherdweg-de-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd 
