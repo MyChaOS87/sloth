@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak-oidc
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: oidc
+  namespace: argocd
+spec:
+  description: access to the used namespaces for oidc
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: keycloak-oidc
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  orphanedResources:
+    warn: false
