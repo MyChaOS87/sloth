@@ -41,7 +41,7 @@ spec:
   project: cluster-essentials
   source:
     repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: feature/rock5b
+    targetRevision: main
     path: cluster-essentials/longhorn-config
   syncPolicy:
     automated:
