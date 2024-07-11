@@ -14,7 +14,6 @@ spec:
     chart: grafana
     helm:
       values: |
-        assertNoLeakedSecrets: false
         ingress:
           enabled: true
           annotations:
@@ -51,6 +50,12 @@ spec:
             secretKeyRef:
               name: influxdb-secret
               key: admin-token
+          GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+            secretKeyRef:
+              name: grafana-client-secret
+              key: client-secret
+        env:
+          GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
         dashboardProviders:
           dashboardproviders.yaml:
             apiVersion: 1
@@ -90,7 +95,6 @@ spec:
             name: Keycloak
             allow_sign_up: true
             client_id: grafana
-            client_secret: qbVzSjh8wjkUJ09HXmVVwcRIpzFaGljX
             scopes: openid email profile offline_access roles
             email_attribute_path: email
             login_attribute_path: username

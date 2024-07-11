@@ -33,7 +33,9 @@ EOF
   echo done! 1>&2
 }
 
-# create_client_secret grafana grafana deployments/smarthome/grafana-secrets || true
+# base64 encoded
+create_client_secret grafana grafana deployments/smarthome/grafana-secrets || true
+# not base64 encoded
 create_client_secret argocd argocd argocd-base/argocd-secrets "app.kubernetes.io/part-of: argocd" || true
 
 echo done! 1>&2
