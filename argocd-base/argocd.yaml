@@ -4,8 +4,8 @@ metadata:
   name: argocd
   namespace: argocd
 spec:
-  source:
-    repoURL: https://argoproj.github.io/argo-helm
+  sources:
+  - repoURL: https://argoproj.github.io/argo-helm
     targetRevision: 7.3.5
     chart: argo-cd
     helm:
@@ -14,7 +14,18 @@ spec:
           enabled: false
         configs:
           params: 
-            server.insecure: true  
+            server.insecure: true
+          cm:
+            url: https://argocd.internal.k8s.vogelherdweg.de
+            oidc.config: |
+              name: Keycloak
+              issuer: https://sso.internal.k8s.vogelherdweg.de/realms/vogelherdweg
+              clientID: argocd
+              clientSecret: $argocd-client-secret:client-secret
+              requestedScopes: ["openid", "profile", "email"]
+          rbac:
+            policy.csv: |
+              g, argocd:admin, role:admin
         server:
           ingress:
             annotations:
@@ -29,6 +40,9 @@ spec:
                 - argocd.internal.k8s.vogelherdweg.de
                 - argocd.rock.k8s.vogelherdweg.de
                 secretName: argocd-rock-k8s-vogelherdweg-de-tls
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: argocd-base/argocd-secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd 

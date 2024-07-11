@@ -3,7 +3,10 @@ set -e +x
 
 source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
 
-check kubeseal gcloud kubectl
+check_programs_available kubeseal gcloud kubectl
+
+assert_no_overwrite cluster-essentials/cert-manager-config/gcloud-dns01-solver.sealed.json
+assert_no_overwrite cluster-essentials/external-dns-config/gcloud-external-dns.sealed.json
 
 [ ! -f .secrets/gcloud-dns01-solver.key.json ] && gcloud iam service-accounts keys create .secrets/gcloud-dns01-solver.key.json \
    --iam-account dns01-solver@vogelherd.iam.gserviceaccount.com

@@ -3,7 +3,8 @@ set -e +x
 
 source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
 
-check kubeseal pwgen head base64
+check_programs_available kubeseal pwgen head base64
+assert_no_overwrite deployments/oidc/keycloak-secrets/keycloak-admin-secret.sealed.json
 
 echo -n create keycloak admin secret... 1>&2
 kubeseal --controller-namespace sealed-secrets > deployments/oidc/keycloak-secrets/keycloak-admin-secret.sealed.json << EOF

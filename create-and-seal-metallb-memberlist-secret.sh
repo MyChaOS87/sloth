@@ -3,7 +3,8 @@ set -e +x
 
 source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
 
-check kubeseal openssl
+check_programs_available kubeseal openssl
+assert_no_overwrite cluster-essentials/metallb-config/memberlist.sealed.json
 
 echo -n Creating memberlist secret and sealing it ... 1>&2
 kubeseal --controller-namespace sealed-secrets > cluster-essentials/metallb-config/memberlist.sealed.json << EOF
