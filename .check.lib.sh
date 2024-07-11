@@ -1,4 +1,4 @@
-function check {
+function check_programs_available {
   result=0
   for p in $@ 
   do
@@ -13,4 +13,14 @@ function check {
   done
   
   return $result
+}
+
+
+function assert_no_overwrite {
+  if [ -f "$1" ]; then
+    echo "ERROR: $1 already exists, please remove it first if you want to recreate it from scratch" 1>&2
+    return 1
+  fi
+
+  return 0
 }

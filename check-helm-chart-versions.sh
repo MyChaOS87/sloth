@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source .check.lib.sh
-check kubectl jq helm awk
+check_programs_available kubectl jq helm awk
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

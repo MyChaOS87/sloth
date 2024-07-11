@@ -3,7 +3,8 @@ set -e +x
 
 source $(dirname -- "${BASH_SOURCE[0]}")/.check.lib.sh
 
-check kubeseal ssh-keygen kubectl
+check_programs_available kubeseal ssh-keygen kubectl
+assert_no_overwrite argocd-base/repository.sealed.json
 
 mkdir -p .secrets/.ssh/
 chmod 700 .secrets/.ssh/
