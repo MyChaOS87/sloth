@@ -35,3 +35,22 @@ spec:
     automated:
       prune: true
       selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dms
+  namespace: argocd
+spec:
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: deployments/dms
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  project: argocd-base
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

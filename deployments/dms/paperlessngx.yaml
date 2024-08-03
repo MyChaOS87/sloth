@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: paperlessngx
+  namespace: argocd
+spec:
+  destination:
+    namespace: paperlessngx-dms
+    server: https://kubernetes.default.svc
+  project: dms
+  sources:
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: deployments/dms/redis-secrets
+  - repoURL: https://github.com/MyChaOS87/fmjstudios-helm.git
+    targetRevision: main
+    path: charts/paperless-ngx
+    helm:
+      values: |
+        paperless:
+          domain: paperless.internal.k8s.vogelherdweg.de
+          data:
+            pvc:
+              size: 50Gi
+              storageClass: longhorn
+          redis:
+            host: redis-paperless
+            existingSecret: redis-secret
+          postgresql:
+            host: postgres
+            user: paperless
+            password: paperless
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+          tls: 
+          - hosts: 
+            - paperless.internal.k8s.vogelherdweg.de
+            secretName: paperless-internal-k8s-vogelherdweg-de-tls
+        tika:
+          image:
+            tag: 2.9.2.1
+        redis:
+          enabled: false
+        postgresql:
+          enabled: false
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: deployments/dms/postgres-secrets
