@@ -5,8 +5,8 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: https://helm.traefik.io/traefik
-    targetRevision: 29.0.1
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 34.4.1
     chart: traefik
     helm:
       values: |
@@ -18,8 +18,10 @@ spec:
           pin-major.version-checker.io/traefik: 2
         ports:
           web:
-            redirectTo: 
-              port: websecure
+            redirections:
+              entryPoint:
+                to: websecure
+                scheme: https
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
