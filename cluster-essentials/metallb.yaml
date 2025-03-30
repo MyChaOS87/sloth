@@ -5,8 +5,8 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 6.3.7
+    repoURL: registry-1.docker.io/bitnamicharts
+    targetRevision: 6.4.8
     chart: metallb
     helm:
       values: |
