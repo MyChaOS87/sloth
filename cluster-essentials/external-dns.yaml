@@ -10,7 +10,7 @@ spec:
   project: cluster-essentials
   source:
     repoURL: registry-1.docker.io/bitnamicharts
-    targetRevision: 8.7.8
+    targetRevision: 9.0.3
     chart: external-dns
     helm:
       values: |
@@ -23,6 +23,8 @@ spec:
         # - rock.k8s.vogelherdweg.de
         podAnnotations:
           use-metadata.version-checker.io/external-dns: "true"
+        image:
+          repository: bitnamilegacy/external-dns
   syncPolicy:
     automated:
       prune: true
