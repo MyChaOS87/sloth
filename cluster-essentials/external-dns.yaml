@@ -9,22 +9,40 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
-    repoURL: registry-1.docker.io/bitnamicharts
-    targetRevision: 9.0.3
+    repoURL: https://kubernetes-sigs.github.io/external-dns/
     chart: external-dns
+    targetRevision: 1.19.0
     helm:
-      values: |
-        provider: google
-        google:
-          project: "vogelherd"          
-          serviceAccountSecret: "gcloud-external-dns"
-          serviceAccountSecretKey: "gcloud-external-dns.key.json"
-        # domainFilters:
-        # - rock.k8s.vogelherdweg.de
+      values: |       
+        sources:
+          - service
+          - ingress
+
+        provider:
+          name: google
+
+        extraArgs:
+          - --google-project=vogelherd
+          # - --domain-filter=rock.k8s.vogelherdweg.de
+        
+        extraVolumeMounts:
+          - name: gcloud-sa
+            mountPath: /etc/kubernetes/
+            readOnly: true
+        
+        extraVolumes:
+          - name: gcloud-sa
+            secret:
+              secretName: gcloud-external-dns 
+              items:
+                - key: gcloud-external-dns.key.json
+                  path: gcloud-key.json 
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/kubernetes/gcloud-key.json
+
         podAnnotations:
           use-metadata.version-checker.io/external-dns: "true"
-        image:
-          repository: bitnamilegacy/external-dns
   syncPolicy:
     automated:
       prune: true
