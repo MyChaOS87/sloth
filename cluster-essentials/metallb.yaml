@@ -5,23 +5,18 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: registry-1.docker.io/bitnamicharts
-    targetRevision: 6.4.22
+    repoURL: https://metallb.github.io/metallb
     chart: metallb
+    targetRevision: 0.15.2
     helm:
       values: |
-        speaker:
-          image:
-            repository: bitnamilegacy/metallb-speaker
-          secretName: memberlist
-          secretKey: secretkey
-          podAnnotations:
-            use-metadata.version-checker.io/metallb-speaker: "true"
         controller:
-          image:
-            repository: bitnamilegacy/metallb-controller
           podAnnotations:
             use-metadata.version-checker.io/metallb-controller: "true"
+        speaker:
+          podAnnotations:
+            use-metadata.version-checker.io/metallb-speaker: "true"
+          secretName: memberlist
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb
