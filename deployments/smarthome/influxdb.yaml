@@ -16,7 +16,7 @@ spec:
       values: |
         persistence:
           enabled: true
-          size: 5Gi
+          size: 10Gi
           storageClass: longhorn
         ingress:
           annotations:
