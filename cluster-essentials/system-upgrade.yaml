@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: system-upgrade
+  namespace: argocd
+spec:
+  destination:
+    namespace: system-upgrade
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  sources:
+    - repoURL: "https://github.com/rancher/system-upgrade-controller.git"
+      targetRevision: v0.17.0
+      path: .
+    - repoURL: git@github.com:MyChaOS87/sloth.git
+      targetRevision: main
+      path: cluster-essentials/system-upgrade-config
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
