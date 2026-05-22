@@ -6,7 +6,7 @@ metadata:
 spec:
   source:
     repoURL: https://traefik.github.io/charts
-    targetRevision: 37.2.0
+    targetRevision: 40.2.0
     chart: traefik
     helm:
       values: |
@@ -14,14 +14,16 @@ spec:
           kubernetesIngress:
             publishedService:
               enabled: true
-        podAnnotations:
-          pin-major.version-checker.io/traefik: 2
+        deployment:
+          podAnnotations:
+            pin-major.version-checker.io/traefik: 2
         ports:
           web:
-            redirections:
-              entryPoint:
-                to: websecure
-                scheme: https
+            http:
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
