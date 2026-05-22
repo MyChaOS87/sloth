@@ -216,7 +216,7 @@ data:
                 "type": "influxdb",
                 "uid": "P951FEA4DE68E13C5"
               },
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.wallbox_name == \"22hg\"\n  )\n  |> drop(columns: [\"host\"])",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.wallbox_name == \"22hg\"\n  )\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])",
               "refId": "A"
             }
           ],
@@ -277,7 +277,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"0\" else if r._field == \"b_act_power\" then \"1\" else \"2\"}))\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"0\" else if r._field == \"b_act_power\" then \"1\" else \"2\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
               "refId": "A"
             }
           ],
@@ -464,7 +464,7 @@ data:
                 "type": "influxdb",
                 "uid": "P951FEA4DE68E13C5"
               },
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.shelly_type == \"relay\" and\n    r._value < 5000\n  )\n  |> drop(columns: [\"host\"])",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.shelly_type == \"relay\" and\n    r._value < 5000\n  )\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])",
               "refId": "A"
             }
           ],
@@ -528,7 +528,7 @@ data:
                 "type": "influxdb",
                 "uid": "P951FEA4DE68E13C5"
               },
-              "query": "  from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.shelly_type == \"relay\" and\n    r._value < 5000\n  )\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
+              "query": "  from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.shelly_type == \"relay\" and\n    r._value < 5000\n  )\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
               "refId": "A"
             }
           ],
