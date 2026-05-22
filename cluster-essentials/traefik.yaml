@@ -14,9 +14,6 @@ spec:
           kubernetesIngress:
             publishedService:
               enabled: true
-        deployment:
-          podAnnotations:
-            pin-major.version-checker.io/traefik: "2"
         ports:
           web:
             http:
