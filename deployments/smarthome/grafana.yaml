@@ -70,10 +70,6 @@ spec:
                 path: /var/lib/grafana/dashboards/default
         dashboards:
           default:
-            environment:
-              url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Environment.json
-            power:
-              url: https://gist.githubusercontent.com/MyChaOS87/6e0fcaf0cf929e3a6add87f5b22a8b53/raw/b6618cfadc10f93f3bd38329c87025fb724d031d/Power.json
             prometheus-stats:
               gnetId: 15489
               datasource: Prometheus
@@ -86,6 +82,11 @@ spec:
             influxdb-stats:
               gnetId: 421
               datasource: InfluxDB
+        sidecar:
+          dashboards:
+            enabled: true
+            label: grafana_dashboard
+            labelValue: "1"
         grafana.ini:
           server:
             domain: grafana.internal.k8s.vogelherdweg.de
@@ -110,6 +111,9 @@ spec:
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/influxdb-secrets
+  - repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: deployments/smarthome/grafana-dashboards
   # syncPolicy:
   #   automated:
   #     prune: true
