@@ -152,6 +152,31 @@ spec:
                         type: "float"
                       - path: "total_aprt_power"
                         type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
+                  - "shellies_blu/BLE/ht/+"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_blu/BLE/ht/+"
+                    tags: "_/_/_/shelly_id"
+                json_v2:
+                  - measurement_name: "temperature"
+                    field:
+                      - path: "temperature"
+                        rename: "value"
+                        type: "float"
+                  - measurement_name: "humidity"
+                    field:
+                      - path: "humidity"
+                        rename: "value"
+                        type: "float"
+                  - measurement_name: "battery"
+                    field:
+                      - path: "battery"
+                        rename: "value"
+                        type: "float"
             - modbus:
                 name: "pluggit_modbus"
                 slave_id: 1
