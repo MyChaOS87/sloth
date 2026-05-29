@@ -127,6 +127,36 @@ spec:
                 servers:
                   - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
                 topics: 
+                  - "shellies_plug/+/status/switch:0"
+                tags:
+                  shelly_type: "relay"
+                data_format: "json_v2"
+                topic_parsing:
+                  - topic: "shellies_plug/+/status/switch:0"
+                    tags: "_/shelly_id/_/_"
+                json_v2:
+                  - measurement_name: "power"
+                    field:
+                      - path: "apower"
+                        rename: "value"
+                        type: "float"
+                      - path: "voltage"
+                        type: "float"
+                      - path: "current"
+                        type: "float"
+                      - path: "freq"
+                        rename: "frequency"
+                        type: "float"
+                      - path: "aenergy.total"
+                        rename: "energy"
+                        type: "float"
+                      - path: "temperature.tC"
+                        rename: "temperature"
+                        type: "float"
+            - mqtt_consumer:
+                servers:
+                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                topics: 
                   - "shellies_plus/+/status/temperature:0"
                 data_format: "json_v2"
                 topic_parsing:
