@@ -80,7 +80,7 @@ data:
                                 "mode": "off"
                             }
                         },
-                        "displayName": "${__field.name}",
+                        "displayName": "Phase ${__field.labels.sub_id}",
                         "mappings": [],
                         "thresholds": {
                             "mode": "absolute",
@@ -125,7 +125,7 @@ data:
                             "uid": "P951FEA4DE68E13C5"
                         },
                         "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({\n    r with\n    _field: if r._field == \"a_act_power\" then \"Phase A\"\n            else if r._field == \"b_act_power\" then \"Phase B\"\n            else \"Phase C\"\n  }))\n  |> drop(columns: [\"host\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n  |> group(columns: [\"_field\"])",
+                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> drop(columns: [\"host\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n  |> group(columns: [\"sub_id\"])",
                         "refId": "A"
                     }
                 ],
@@ -233,7 +233,7 @@ data:
                         "color": {
                             "mode": "palette-classic"
                         },
-                        "displayName": "${__field.name}",
+                        "displayName": "Phase ${__field.labels.sub_id}",
                         "mappings": [],
                         "thresholds": {
                             "mode": "absolute",
@@ -277,7 +277,7 @@ data:
                             "uid": "P951FEA4DE68E13C5"
                         },
                         "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({\n    r with\n    _field: if r._field == \"a_act_power\" then \"Phase A\"\n            else if r._field == \"b_act_power\" then \"Phase B\"\n            else \"Phase C\"\n  }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")\n  |> group(columns: [\"_field\"])",
+                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")\n  |> group(columns: [\"sub_id\"])",
                         "refId": "A"
                     }
                 ],
@@ -328,7 +328,7 @@ data:
                                 "mode": "off"
                             }
                         },
-                        "displayName": "${__field.name}",
+                        "displayName": "Phase ${__field.labels.sub_id}",
                         "mappings": [],
                         "thresholds": {
                             "mode": "absolute",
@@ -373,7 +373,7 @@ data:
                             "uid": "P951FEA4DE68E13C5"
                         },
                         "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({\n    r with\n    _field: if r._field == \"a_act_power\" then \"Phase A\"\n            else if r._field == \"b_act_power\" then \"Phase B\"\n            else \"Phase C\"\n  }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> group(columns: [\"_field\"])",
+                        "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> group(columns: [\"sub_id\"])",
                         "refId": "A"
                     }
                 ],
@@ -646,8 +646,7 @@ data:
                                 }
                             ]
                         },
-                        "unit": "currency:EUR",
-                        "displayName": "${__field.name}"
+                        "unit": "currency:EUR"
                     },
                     "overrides": []
                 },
