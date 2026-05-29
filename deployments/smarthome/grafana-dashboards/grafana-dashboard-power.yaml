@@ -114,8 +114,9 @@ data:
                         "showLegend": true
                     },
                     "tooltip": {
-                        "mode": "single",
-                        "sort": "none"
+                        "mode": "multi",
+                        "sort": "none",
+                        "hideZeros": true
                     }
                 },
                 "targets": [
@@ -609,8 +610,9 @@ data:
                         "showLegend": true
                     },
                     "tooltip": {
-                        "mode": "single",
-                        "sort": "none"
+                        "mode": "multi",
+                        "sort": "none",
+                        "hideZeros": true
                     }
                 },
                 "targets": [
@@ -634,7 +636,7 @@ data:
                 "fieldConfig": {
                     "defaults": {
                         "color": {
-                            "mode": "thresholds"
+                            "mode": "palette-classic"
                         },
                         "mappings": [],
                         "thresholds": {
@@ -721,7 +723,7 @@ data:
                             "spanNulls": false,
                             "stacking": {
                                 "group": "A",
-                                "mode": "none"
+                                "mode": "normal"
                             },
                             "thresholdsStyle": {
                                 "mode": "off"
@@ -758,8 +760,9 @@ data:
                         "showLegend": true
                     },
                     "tooltip": {
-                        "mode": "single",
-                        "sort": "none"
+                        "mode": "multi",
+                        "sort": "none",
+                        "hideZeros": true
                     }
                 },
                 "targets": [
@@ -836,7 +839,7 @@ data:
                     "y": 40
                 },
                 "id": 12,
-                "timeFrom": "14d",
+                "timeFrom": "30d",
                 "timeShift": null,
                 "options": {
                     "legend": {
@@ -856,11 +859,11 @@ data:
                             "type": "influxdb",
                             "uid": "P951FEA4DE68E13C5"
                         },
-                        "query": "import \"timezone\"\nimport \"date\"\noption location = timezone.location(name: \"Europe/Berlin\")\n\ntoday = date.truncate(t: now(), unit: 1d)\nstart_time = date.add(d: -14d, to: today)\n\nfrom(bucket: \"default\")\n  |> range(start: start_time)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field == \"power\")\n  |> group()\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> fill(usePrevious: true)\n  |> group(columns: [\"_start\", \"_stop\"])\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> sort(columns: [\"_time\"]) |> integral(unit: 1h), timeSrc: \"_start\")\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Wallbox Daily Cost\"\n  }))\n  |> group(columns: [\"_field\"])\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
+                        "query": "import \"timezone\"\nimport \"date\"\noption location = timezone.location(name: \"Europe/Berlin\")\n\ntoday = date.truncate(t: now(), unit: 1d)\nstart_time = date.add(d: -30d, to: today)\n\nfrom(bucket: \"default\")\n  |> range(start: start_time)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field == \"power\")\n  |> group()\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> fill(usePrevious: true)\n  |> group(columns: [\"_start\", \"_stop\"])\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> sort(columns: [\"_time\"]) |> integral(unit: 1h), timeSrc: \"_start\")\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Wallbox Daily Cost\"\n  }))\n  |> group(columns: [\"_field\"])\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
                         "refId": "A"
                     }
                 ],
-                "title": "Wallbox Daily Cost - Past 14 Days",
+                "title": "Wallbox Daily Cost - Past 30 Days",
                 "type": "timeseries"
             }
         ],
