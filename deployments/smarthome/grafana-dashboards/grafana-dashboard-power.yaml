@@ -125,7 +125,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"0\" else if r._field == \"b_act_power\" then \"1\" else \"2\"}))\n  |> drop(columns: [\"host\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> drop(columns: [\"host\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)",
               "refId": "A"
             }
           ],
@@ -194,8 +194,8 @@ data:
           "gridPos": {
             "h": 13,
             "w": 10,
-            "x": 10,
-            "y": 0
+            "x": 0,
+            "y": 40
           },
           "id": 3,
           "options": {
@@ -277,7 +277,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"0\" else if r._field == \"b_act_power\" then \"1\" else \"2\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])\n  |> integral(unit: 1h, interpolate: \"\")",
               "refId": "A"
             }
           ],
@@ -348,10 +348,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 14,
+            "h": 13,
             "w": 10,
-            "x": 0,
-            "y": 13
+            "x": 10,
+            "y": 0
           },
           "id": 4,
           "options": {
@@ -373,7 +373,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-081baa53-0214-49c4-b1c8-9d1bf5ad8cc2-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"0\" else if r._field == \"b_act_power\" then \"1\" else \"2\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({r with sub_id: if r._field == \"a_act_power\" then \"A\" else if r._field == \"b_act_power\" then \"B\" else \"C\"}))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> drop(columns: [\"host\"])",
               "refId": "A"
             }
           ],
@@ -442,8 +442,8 @@ data:
           "gridPos": {
             "h": 14,
             "w": 10,
-            "x": 10,
-            "y": 13
+            "x": 0,
+            "y": 26
           },
           "id": 5,
           "options": {
@@ -504,7 +504,7 @@ data:
             "h": 14,
             "w": 4,
             "x": 20,
-            "y": 13
+            "y": 26
           },
           "id": 8,
           "options": {
@@ -534,6 +534,383 @@ data:
           ],
           "title": "Panel Title",
           "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 54,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currency:EUR"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 13,
+            "w": 20,
+            "x": 0,
+            "y": 13
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "overall = from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({\n    _time: r._time,\n    phase: if r._field == \"a_act_power\" then \"A\"\n           else if r._field == \"b_act_power\" then \"B\"\n           else \"C\",\n    _value: r._value,\n    _field: \"overall\"\n  }))\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n\nwallbox = from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field =~ /^l[1-3]_power$/)\n  |> map(fn: (r) => ({\n    _time: r._time,\n    phase: if r._field == \"l1_power\" then \"A\"\n           else if r._field == \"l2_power\" then \"B\"\n           else \"C\",\n    _value: r._value,\n    _field: \"wallbox\"\n  }))\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n\nunion(tables: [overall, wallbox])\n  |> group(columns: [\"phase\"])\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n    r with\n    _value: (if exists r.overall then r.overall else 0.0) - (if exists r.wallbox then r.wallbox else 0.0)\n  }))\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Phase \" + r.phase\n  }))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Daily Cost (No Wallbox) - Past 14 Days Stacked",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currency:EUR"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 13,
+            "w": 4,
+            "x": 20,
+            "y": 13
+          },
+          "id": 10,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "overall = from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"em:0\" and r._field =~ /^[a-c]_act_power$/)\n  |> map(fn: (r) => ({ \n    _time: r._time,\n    phase: if r._field == \"a_act_power\" then \"A\"\n           else if r._field == \"b_act_power\" then \"B\"\n           else \"C\",\n    _value: r._value,\n    _field: \"overall\"\n  }))\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n\nwallbox = from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field =~ /^l[1-3]_power$/)\n  |> map(fn: (r) => ({\n    _time: r._time,\n    phase: if r._field == \"l1_power\" then \"A\"\n           else if r._field == \"l2_power\" then \"B\"\n           else \"C\",\n    _value: r._value,\n    _field: \"wallbox\"\n  }))\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: true)\n  |> fill(usePrevious: true)\n\nnet_power = union(tables: [overall, wallbox])\n  |> group(columns: [\"phase\"])\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n    r with\n    _value: (if exists r.overall then r.overall else 0.0) - (if exists r.wallbox then r.wallbox else 0.0)\n  }))\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727\n  }))\n\nyearly_phases = net_power\n  |> mean()\n  |> map(fn: (r) => ({\n    r with\n    _value: r._value * 365.0,\n    _field: \"Phase \" + r.phase\n  }))\n  |> keep(columns: [\"_value\", \"_field\"])\n\nyearly_total = net_power\n  |> group()\n  |> aggregateWindow(every: 1d, fn: sum)\n  |> mean()\n  |> map(fn: (r) => ({\n    r with\n    _value: r._value * 365.0,\n    _field: \"Total\"\n  }))\n  |> keep(columns: [\"_value\", \"_field\"])\n\nunion(tables: [yearly_phases, yearly_total])",
+              "refId": "A"
+            }
+          ],
+          "title": "Yearly Estimated Cost (No Wallbox)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 17,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currency:EUR"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 14,
+            "w": 10,
+            "x": 10,
+            "y": 26
+          },
+          "id": 11,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.shelly_type == \"relay\" and r._field == \"value\")\n  |> group(columns: [\"shelly_id\"])\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> group()\n  |> aggregateWindow(every: 1d, fn: sum)\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Outlets Daily Cost\"\n  }))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Outlets Daily Cost - Past 14 Days",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 17,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currency:EUR"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 13,
+            "w": 10,
+            "x": 10,
+            "y": 40
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field == \"power\")\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Wallbox Daily Cost\"\n  }))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Wallbox Daily Cost - Past 14 Days",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "currency:EUR"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 13,
+            "w": 4,
+            "x": 20,
+            "y": 40
+          },
+          "id": 13,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field == \"power\")\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727\n  }))\n  |> mean()\n  |> map(fn: (r) => ({\n    r with\n    _value: r._value * 365.0,\n    _field: \"Yearly Estimate\"\n  }))\n  |> keep(columns: [\"_value\", \"_field\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Yearly Estimated Cost (Wallbox)",
+          "type": "stat"
         }
       ],
       "refresh": "5s",
