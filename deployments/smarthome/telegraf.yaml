@@ -140,18 +140,30 @@ spec:
                       - path: "apower"
                         rename: "value"
                         type: "float"
+                  - measurement_name: "voltage"
+                    field:
                       - path: "voltage"
+                        rename: "value"
                         type: "float"
+                  - measurement_name: "current"
+                    field:
                       - path: "current"
+                        rename: "value"
                         type: "float"
+                  - measurement_name: "frequency"
+                    field:
                       - path: "freq"
-                        rename: "frequency"
+                        rename: "value"
                         type: "float"
+                  - measurement_name: "energy"
+                    field:
                       - path: "aenergy.total"
-                        rename: "energy"
+                        rename: "value"
                         type: "float"
+                  - measurement_name: "temperature"
+                    field:
                       - path: "temperature.tC"
-                        rename: "temperature"
+                        rename: "value"
                         type: "float"
             - mqtt_consumer:
                 servers:
