@@ -551,9 +551,9 @@ data:
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 54,
-                "gradientMode": "hue",
+                "drawStyle": "bars",
+                "fillOpacity": 80,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -599,6 +599,8 @@ data:
             "y": 13
           },
           "id": 9,
+          "timeFrom": "14d",
+          "timeShift": null,
           "options": {
             "legend": {
               "calcs": [],
@@ -655,9 +657,11 @@ data:
             "y": 13
           },
           "id": 10,
+          "timeFrom": "14d",
+          "timeShift": null,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -698,9 +702,9 @@ data:
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 17,
-                "gradientMode": "opacity",
+                "drawStyle": "bars",
+                "fillOpacity": 80,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -743,6 +747,8 @@ data:
             "y": 26
           },
           "id": 11,
+          "timeFrom": "7d",
+          "timeShift": null,
           "options": {
             "legend": {
               "calcs": [],
@@ -761,11 +767,11 @@ data:
                 "type": "influxdb",
                 "uid": "P951FEA4DE68E13C5"
               },
-              "query": "from(bucket: \"default\")\n  |> range(start: -14d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.shelly_type == \"relay\" and r._field == \"value\")\n  |> group(columns: [\"shelly_id\"])\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> group()\n  |> aggregateWindow(every: 1d, fn: sum)\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Outlets Daily Cost\"\n  }))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
+              "query": "from(bucket: \"default\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.shelly_type == \"relay\" and r._field == \"value\")\n  |> group(columns: [\"shelly_id\"])\n  |> aggregateWindow(every: 1d, fn: (column, tables=<-) => tables |> integral(unit: 1h))\n  |> group()\n  |> aggregateWindow(every: 1d, fn: sum)\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0) * 0.2727,\n    _field: \"Outlets Daily Cost\"\n  }))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])",
               "refId": "A"
             }
           ],
-          "title": "Outlets Daily Cost - Past 14 Days",
+          "title": "Outlets Daily Cost - Past 7 Days",
           "type": "timeseries"
         },
         {
@@ -784,9 +790,9 @@ data:
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 17,
-                "gradientMode": "opacity",
+                "drawStyle": "bars",
+                "fillOpacity": 80,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -829,6 +835,8 @@ data:
             "y": 40
           },
           "id": 12,
+          "timeFrom": "14d",
+          "timeShift": null,
           "options": {
             "legend": {
               "calcs": [],
@@ -885,9 +893,11 @@ data:
             "y": 40
           },
           "id": 13,
+          "timeFrom": "14d",
+          "timeShift": null,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
