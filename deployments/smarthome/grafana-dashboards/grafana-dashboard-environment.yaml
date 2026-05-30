@@ -128,7 +128,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-09a83cd2-e401-493b-a623-b392dc9079af-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> drop(columns: [\"host\"])\n",
+              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])\n",
               "refId": "B"
             }
           ],
@@ -199,7 +199,7 @@ data:
                 "type": "influxdb",
                 "uid": "P951FEA4DE68E13C5"
               },
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> drop(columns: [\"host\"])\n",
+              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])\n",
               "refId": "A"
             }
           ],
@@ -291,7 +291,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-09a83cd2-e401-493b-a623-b392dc9079af-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"humidity\")\n  |> drop(columns: [\"host\"])",
+              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"humidity\")\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])",
               "refId": "B"
             }
           ],
@@ -378,7 +378,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-09a83cd2-e401-493b-a623-b392dc9079af-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"battery\")\n  |> filter(fn: (r) => r[\"_value\"] < 90)\n  |> drop(columns: [\"host\"])",
+              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"battery\")\n  |> filter(fn: (r) => r[\"_value\"] < 90)\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])",
               "refId": "B"
             }
           ],
