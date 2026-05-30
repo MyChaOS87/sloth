@@ -378,7 +378,7 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-09a83cd2-e401-493b-a623-b392dc9079af-0",
-              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"battery\")\n  |> filter(fn: (r) => r[\"_value\"] < 90)\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plug|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])",
+              "query": "import \"regexp\"\nfrom(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"battery\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with shelly_id: regexp.replaceAllString(r: /^shelly(plugs|plugm|plug|plusht|htblue|ht)-/, v: r.shelly_id, t: \"\") }))\n  |> drop(columns: [\"host\"])",
               "refId": "B"
             }
           ],
