@@ -54,8 +54,8 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 72,
-                "gradientMode": "opacity",
+                "fillOpacity": 0,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -128,12 +128,83 @@ data:
                 "uid": "P951FEA4DE68E13C5"
               },
               "key": "Q-09a83cd2-e401-493b-a623-b392dc9079af-0",
-              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> drop(columns: [\"host\"])\n",
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> drop(columns: [\"host\"])\n",
               "refId": "B"
             }
           ],
           "title": "Temperature",
           "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "displayName": "${__field.labels.shelly_id}",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 18
+                  },
+                  {
+                    "color": "orange",
+                    "value": 24
+                  },
+                  {
+                    "color": "red",
+                    "value": 28
+                  }
+                ]
+              },
+              "unit": "celsius"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 16
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"default\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"temperature\")\n  |> filter(fn: (r) => not exists r.shelly_type or r.shelly_type != \"relay\")\n  |> drop(columns: [\"host\"])\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Last Temperatures",
+          "type": "stat"
         },
         {
           "datasource": {
@@ -152,8 +223,8 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 61,
-                "gradientMode": "opacity",
+                "fillOpacity": 0,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -170,7 +241,7 @@ data:
                 "stacking": {
                   "group": "A",
                   "mode": "none"
-                },
+                    },
                 "thresholdsStyle": {
                   "mode": "off"
                 }
@@ -198,7 +269,7 @@ data:
             "h": 14,
             "w": 24,
             "x": 0,
-            "y": 16
+            "y": 21
           },
           "id": 2,
           "options": {
@@ -281,7 +352,7 @@ data:
             "h": 6,
             "w": 24,
             "x": 0,
-            "y": 30
+            "y": 35
           },
           "id": 3,
           "options": {

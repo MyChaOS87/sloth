@@ -143,6 +143,67 @@ data:
                         "color": {
                             "mode": "palette-classic"
                         },
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        },
+                        "unit": "currency:EUR",
+                        "displayName": "${__field.labels._field}"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 6,
+                    "w": 24,
+                    "x": 0,
+                    "y": 33
+                },
+                "id": 13,
+                "timeFrom": "14d",
+                "timeShift": null,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "value_and_name"
+                },
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "influxdb",
+                            "uid": "P951FEA4DE68E13C5"
+                        },
+                        "query": "import \"timezone\"\nimport \"date\"\noption location = timezone.location(name: \"Europe/Berlin\")\n\ntoday = date.truncate(t: now(), unit: 1d)\nstart_time = date.add(d: -14d, to: today)\n\noutlets_yearly = from(bucket: \"default\")\n  |> range(start: start_time, stop: today)\n  |> filter(fn: (r) =>\n    r._measurement == \"power\" and\n    r.shelly_type == \"relay\" and\n    r._value < 5000 and\n    r._field == \"value\"\n  )\n  |> group(columns: [\"shelly_id\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> fill(usePrevious: true)\n  |> group(columns: [\"shelly_id\", \"_start\", \"_stop\"])\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({\n    r with\n    _value: (r._value / 1000.0 / 14.0) * 365.0 * 0.2727,\n    _field: r.shelly_id\n  }))\n  |> keep(columns: [\"_value\", \"_field\"])\n\noutlets_total = outlets_yearly\n  |> group()\n  |> sum()\n  |> map(fn: (r) => ({\n    _value: r._value,\n    _field: \"Total\"\n  }))\n\nunion(tables: [outlets_yearly, outlets_total])\n  |> group(columns: [\"_field\"])",
+                        "refId": "A"
+                    }
+                ],
+                "title": "Yearly Estimated Cost (Outlets)",
+                "type": "stat"
+            },
+            {
+                "datasource": {
+                    "type": "influxdb",
+                    "uid": "P951FEA4DE68E13C5"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "palette-classic"
+                        },
                         "custom": {
                             "axisCenteredZero": false,
                             "axisColorMode": "text",
@@ -194,9 +255,9 @@ data:
                 },
                 "gridPos": {
                     "h": 13,
-                    "w": 12,
+                    "w": 10,
                     "x": 0,
-                    "y": 40
+                    "y": 39
                 },
                 "id": 3,
                 "options": {
@@ -436,7 +497,8 @@ data:
                                 }
                             ]
                         },
-                        "unit": "watt"
+                        "unit": "watt",
+                        "max": 450
                     },
                     "overrides": []
                 },
@@ -444,7 +506,7 @@ data:
                     "h": 14,
                     "w": 10,
                     "x": 0,
-                    "y": 26
+                    "y": 19
                 },
                 "id": 5,
                 "options": {
@@ -455,7 +517,7 @@ data:
                         "showLegend": true
                     },
                     "tooltip": {
-                        "mode": "single",
+                        "mode": "multi",
                         "sort": "none"
                     }
                 },
@@ -505,7 +567,7 @@ data:
                     "h": 14,
                     "w": 4,
                     "x": 20,
-                    "y": 26
+                    "y": 19
                 },
                 "id": 8,
                 "options": {
@@ -594,7 +656,7 @@ data:
                     "overrides": []
                 },
                 "gridPos": {
-                    "h": 13,
+                    "h": 6,
                     "w": 20,
                     "x": 0,
                     "y": 13
@@ -654,7 +716,7 @@ data:
                     "overrides": []
                 },
                 "gridPos": {
-                    "h": 13,
+                    "h": 6,
                     "w": 4,
                     "x": 20,
                     "y": 13
@@ -747,7 +809,7 @@ data:
                     "h": 14,
                     "w": 10,
                     "x": 10,
-                    "y": 26
+                    "y": 19
                 },
                 "id": 11,
                 "timeFrom": "7d",
@@ -834,9 +896,9 @@ data:
                 },
                 "gridPos": {
                     "h": 13,
-                    "w": 12,
-                    "x": 12,
-                    "y": 40
+                    "w": 10,
+                    "x": 10,
+                    "y": 39
                 },
                 "id": 12,
                 "timeFrom": "30d",
@@ -865,6 +927,67 @@ data:
                 ],
                 "title": "Wallbox Daily Cost - Past 30 Days",
                 "type": "timeseries"
+            },
+            {
+                "datasource": {
+                    "type": "influxdb",
+                    "uid": "P951FEA4DE68E13C5"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "palette-classic"
+                        },
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                }
+                            ]
+                        },
+                        "unit": "currency:EUR",
+                        "displayName": "${__field.labels._field}"
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 13,
+                    "w": 4,
+                    "x": 20,
+                    "y": 39
+                },
+                "id": 14,
+                "timeFrom": "90d",
+                "timeShift": null,
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "none",
+                    "justifyMode": "auto",
+                    "orientation": "auto",
+                    "reduceOptions": {
+                        "calcs": [
+                            "lastNotNull"
+                        ],
+                        "fields": "",
+                        "values": false
+                    },
+                    "textMode": "value_and_name"
+                },
+                "targets": [
+                    {
+                        "datasource": {
+                            "type": "influxdb",
+                            "uid": "P951FEA4DE68E13C5"
+                        },
+                        "query": "import \"timezone\"\nimport \"date\"\noption location = timezone.location(name: \"Europe/Berlin\")\n\ntoday = date.truncate(t: now(), unit: 1d)\nstart_90 = date.add(d: -90d, to: today)\nstart_30 = date.add(d: -30d, to: today)\n\ndata = from(bucket: \"default\")\n  |> range(start: start_90, stop: today)\n  |> filter(fn: (r) => r._measurement == \"power\" and r.wallbox_name == \"22hg\" and r._field == \"power\")\n  |> group()\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> fill(usePrevious: true)\n\nest_30 = data\n  |> filter(fn: (r) => r._time >= start_30)\n  |> group(columns: [\"_start\", \"_stop\"])\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({\n    _value: (r._value / 1000.0 / 30.0) * 365.0 * 0.2727,\n    _field: \"30 Day Basis\"\n  }))\n\nest_90 = data\n  |> group(columns: [\"_start\", \"_stop\"])\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({\n    _value: (r._value / 1000.0 / 90.0) * 365.0 * 0.2727,\n    _field: \"90 Day Basis\"\n  }))\n\nunion(tables: [est_30, est_90])\n  |> group(columns: [\"_field\"])",
+                        "refId": "A"
+                    }
+                ],
+                "title": "Yearly Estimated Cost (Wallbox)",
+                "type": "stat"
             }
         ],
         "refresh": "5s",
