@@ -18,6 +18,7 @@ This document describes homecluster-specific (sloth) conventions and tooling.
 - **Check Kubectl Context**: Always double check that you are using the correct/appropriate `kubectl` context before running commands (verify using `kubectl config current-context`).
 - **Assume Cluster Exists**: Do not assume you need to bootstrap or recreate the cluster from scratch; always assume the `sloth` cluster exists and operates in its current state.
 - **Verify via ArgoCD**: Use the ArgoCD UI or CLI to check/validate status and sync progress of pushed changes.
+- **No Manual Kubernetes Mutations**: Do not manually modify cluster state (e.g. `kubectl apply`, `kubectl delete`, `kubectl patch`, etc.) without asking first. Let ArgoCD sync configurations. Temporary read-only operations (e.g. `kubectl get`, `kubectl logs`, `kubectl exec` for querying/testing) are allowed.
 - **Sealed Secrets Generation**: Sealed secrets should only be regenerated after explicit user confirmation.
 - **No Destructive Operations**: Never perform any destructive operation without explicit user confirmation.
 
