@@ -36,7 +36,7 @@ spec:
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/influxdb-secrets
-  # syncPolicy:
-  #   automated:
-  #     prune: true
-  #     selfHeal: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

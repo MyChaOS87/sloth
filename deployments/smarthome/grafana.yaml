@@ -114,7 +114,7 @@ spec:
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/grafana-dashboards
-  # syncPolicy:
-  #   automated:
-  #     prune: true
-  #     selfHeal: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
