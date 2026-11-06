@@ -18,8 +18,9 @@ spec:
           annotations:
             metallb.universe.tf/loadBalancerIPs: 192.168.1.30
             external-dns.alpha.kubernetes.io/hostname: mosquitto.rock.k8s.vogelherdweg.de,mosquitto.internal.k8s.vogelherdweg.de.
+            external-dns.kubernetes.io/hostname: mosquitto.rock.k8s.vogelherdweg.de,mosquitto.internal.k8s.vogelherdweg.de.
           type: LoadBalancer
-  # syncPolicy:
-  #   automated:
-  #     prune: true
-  #     selfHeal: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
