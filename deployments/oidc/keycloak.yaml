@@ -10,7 +10,7 @@ spec:
   project: oidc
   sources:
   - repoURL: https://codecentric.github.io/helm-charts
-    targetRevision: 7.1.11
+    targetRevision: 7.4.0
     chart: keycloakx
     helm:
       values: |
@@ -52,3 +52,7 @@ spec:
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/oidc/keycloak-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
