@@ -10,7 +10,7 @@ spec:
   project: cluster-essentials
   sources:
     - repoURL: "https://github.com/rancher/system-upgrade-controller.git"
-      targetRevision: v0.17.0
+      targetRevision: v0.21.0
       path: .
     - repoURL: git@github.com:MyChaOS87/sloth.git
       targetRevision: main
