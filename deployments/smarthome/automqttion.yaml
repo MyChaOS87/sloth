@@ -12,3 +12,7 @@ spec:
   - repoURL: https://mychaos87.github.io/automqttion
     targetRevision: 0.0.2
     chart: automqttion
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
