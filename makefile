@@ -24,7 +24,7 @@ checkPrerequisites.all: checkPrerequisites.kubectl checkPrerequisites.helm check
 
 .PHONY: sealed-secrets.install
 sealed-secrets.install: checkPrerequisites.helm checkPrerequisites.yq 
-	helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+	helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets
 	helm install sealed-secrets --namespace sealed-secrets --create-namespace --set-string fullnameOverride=sealed-secrets-controller --version $(SEALEDSECRETSVERSION) sealed-secrets/sealed-secrets
 
 .PHONY: sealed-secrets.seal.sshRepoKey
