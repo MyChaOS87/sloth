@@ -11,18 +11,21 @@ spec:
   source:
     repoURL: https://kubernetes-sigs.github.io/external-dns/
     chart: external-dns
-    targetRevision: 1.21.1
+    targetRevision: 1.23.0
     helm:
       values: |       
         sources:
           - service
           - ingress
 
+        policy: sync
+
         provider:
           name: google
 
         extraArgs:
           - --google-project=vogelherd
+          - --enable-legacy-annotation-prefix
           # - --domain-filter=rock.k8s.vogelherdweg.de
         
         extraVolumeMounts:

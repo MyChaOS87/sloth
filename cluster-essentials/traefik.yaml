@@ -6,7 +6,7 @@ metadata:
 spec:
   source:
     repoURL: https://traefik.github.io/charts
-    targetRevision: 40.2.0
+    targetRevision: 42.3.1
     chart: traefik
     helm:
       values: |
