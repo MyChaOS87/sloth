@@ -6,10 +6,13 @@ metadata:
 spec:
   sources:
   - repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 9.5.15
+    targetRevision: 10.14.0
     chart: argo-cd
     helm:
       values: |
+        global:
+          networkPolicy:
+            create: false
         dex:
           enabled: false
         configs:
