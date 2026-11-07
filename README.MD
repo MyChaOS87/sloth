@@ -17,17 +17,19 @@ I try to keep as much as possible hardware independent. Just skip the Hardware c
 * [argo-cd](https://argo-cd.readthedocs.io/en/stable/) for continuous delivery, basically controlling everything in this cluster. The general idea is, there should be no other interaction necessary to manage anything on the cluster, except this git-repo and argocd...
 * [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets) to solve the problem: "I can manage all my K8s config in git, except Secrets."
 * [longhorn](https://longhorn.io) as persistent storage provider
-* [kubernetes-dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
+* [MetalLB](https://metallb.universe.tf/) for bare-metal LoadBalancer IP allocation across k3s nodes
+* [Traefik](https://traefik.io/traefik/) as ingress controller
+* [cert-manager](https://cert-manager.io/) & [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) for automated Let's Encrypt TLS certificates and DNS synchronization
+* [Keycloak](https://www.keycloak.org/) for OIDC Single Sign-On (SSO)
+* [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [InfluxDB](https://www.influxdata.com/), and [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/) for cluster and smarthome monitoring
 * [mosquitto](https://mosquitto.org/) as MQTT broker
+* [automqttion](https://github.com/MyChaOS87/automqttion) for declarative MQTT automations
 
 It's a hobby project, so see [Disclaimer](#disclaimer).
 
 ### Planned additions (in no particular order):
-* LoadBalancing between k3s Nodes
 * PodDisruptionBudgets, multiple pods...
 * mosquitto authentication
-* SSO via keycloak
-* cluster/node monitoring
 * hardening security
 * making it more reusable - complete proper separation of values and templates(which currently are sometimes more plain yaml files and not templates), to pulling values into a different repository, so this could be universally used for bootstrapping any clusters with the base argocd stuff.
 * ...
@@ -145,7 +147,7 @@ sudo mkdir -p /var/lib/longhorn/disk0/ #and depending on your desired config mou
 > ```bash
 > k3s-killall.sh
 > ```
-> * resize `/` partition - (this should be done *offline & unmounted*, but as we are already on the risk path IDGAF :godmode:): 
+> * resize `/` partition - (this should normally be done *offline & unmounted*, but on a fresh node with disposable data I took the live shortcut): 
 >```bash
 >sudo parted /dev/nvme0n1 resizepart 1 100G
 >```
@@ -221,7 +223,7 @@ make argocd.install
 
 ### Updates & Lifecycle
 From here on Argocd can be used to control the whole deployment (including argocd itself and the sealed-secrets)...
-Use `make argocd.password` to retrieve your admin password from the cluster, as we have no SSO yet. ([see above](#planned-additions-in-no-particular-order))
+Use `make argocd.password` to retrieve your initial admin password from the cluster.
 
 Happy Deploying ...
 
