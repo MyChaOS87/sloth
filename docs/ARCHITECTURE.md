@@ -42,7 +42,7 @@ flowchart TD
         Telegraf["telegraf (1.8.78)<br/>ns: telegraf"]
         InfluxDB["influxdb (influxdb2 2.1.2)<br/>ns: influxdb"]
         Grafana["grafana (6.52.2) + dashboards<br/>ns: grafana"]
-        Automqttion["automqttion (0.0.4)<br/>ns: automqttion"]
+        Automqttion["automqttion (0.0.5)<br/>ns: automqttion"]
     end
 
     RootEssentials --> SealedSecrets
