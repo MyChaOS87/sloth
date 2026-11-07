@@ -29,7 +29,6 @@ Read the specific guide below that matches your current task before modifying an
 
 ## Git & Solo Linear-`main` Workflow
 
-- **Repository Scope**: Always operate Git commands within `/home/kasch/projects/homecluster/sloth` (`git -C /home/kasch/projects/homecluster/sloth ...`).
 - **Branching Strategy**: Work directly on `main` (or short-lived branches fast-forward merged into `main`) to maintain a clean linear history.
 - **Pre-Commit Verification**: Always render modified Helm values or Kustomize overlays locally (`helm template` / `kubectl kustomize`) and verify `git diff` before committing.
 - **No Unapproved Push**: **Never run `git push` without explicit user permission.** Because Argo CD tracks `HEAD` on `origin/main` with automated `syncPolicy`, pushing immediately mutates the live home cluster.

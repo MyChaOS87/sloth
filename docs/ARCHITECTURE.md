@@ -69,10 +69,10 @@ flowchart TD
 
 | `AppProject` | Manifest | Permitted Source Repos | Target Namespaces |
 |--------------|----------|------------------------|-------------------|
-| `argocd-base` | [`argocd-base/project.yaml`](../argocd-base/project.yaml) | `*` | `argocd` |
-| `cluster-essentials` | [`cluster-essentials/project.yaml`](../cluster-essentials/project.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
-| `oidc` | [`deployments/oidc.yaml`](../deployments/oidc.yaml) | `*` | `*` (`keycloak`) |
-| `smarthome` | [`deployments/smarthome.yaml`](../deployments/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `influxdb`, `grafana`, `automqttion`) |
+| `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `*` | `argocd` |
+| `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
+| `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
+| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `influxdb`, `grafana`, `automqttion`) |
 
 ---
 
