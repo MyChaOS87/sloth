@@ -10,8 +10,13 @@ spec:
   project: smarthome
   sources:
   - repoURL: https://mychaos87.github.io/automqttion
-    targetRevision: 0.0.3
+    targetRevision: 0.0.4
     chart: automqttion
+    helm:
+      values: |
+        env:
+          - name: AUTOMQTTION_MQTT_BROKER
+            value: "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
   syncPolicy:
     automated:
       prune: true
