@@ -24,6 +24,11 @@ kind: Namespace
 metadata:
   name: automqttion
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reverselcn
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -43,6 +48,8 @@ spec:
   - namespace: telegraf
     server: https://kubernetes.default.svc
   - namespace: automqttion
+    server: https://kubernetes.default.svc
+  - namespace: reverselcn
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
