@@ -7,7 +7,7 @@ Because `sloth` is an infrastructure/GitOps repository rather than a Go codebase
 ## 1. Three-Tier Validation Model
 
 ### Tier 1: Offline Pre-Commit Manifest & Schema Validation
-Before committing any change to `argocd-base/`, `cluster-essentials/`, or `deployments/`, validate that the chart or overlay renders cleanly and passes JSON Schema validation:
+Before committing any change to `argocd-base/`, `nodes/`, `cluster-essentials/`, or `deployments/`, validate that the chart or overlay renders cleanly and passes JSON Schema validation:
 
 1. **Helm Chart Rendering & Schema Check**:
    Extract inline `values` (or use `valuesObject` / `values.yaml`) and run `helm template`:
@@ -32,9 +32,12 @@ Before committing any change to `argocd-base/`, `cluster-essentials/`, or `deplo
 
 ---
 
-### Tier 2: Staged GitOps Sync & Rollout Verification
+### Tier 2: Staged GitOps Sync & Mandatory Live Cluster Monitoring
+> [!IMPORTANT]
+> **Mandatory Live Cluster Monitoring Rule**: Whenever any change is pushed to `origin/main` (or applied to the cluster), you **must** actively monitor the cluster until all affected Argo CD Applications reach `Synced` + `Healthy` and all pod rollouts, DaemonSets, and `system-upgrade` jobs settle cleanly without crash loops. Never consider a change complete right after `git push`.
+
 When upgrading multiple components, push and verify in dependency order rather than all at once:
-1. **Stage 1 (Control Plane & Secrets)**: `sealed-secrets` $\rightarrow$ `argocd`
+1. **Stage 1 (Control Plane, Nodes & Secrets)**: `nodes` $\rightarrow$ `sealed-secrets` $\rightarrow$ `argocd`
 2. **Stage 2 (Networking & PKI)**: `metallb` $\rightarrow$ `traefik` $\rightarrow$ `cert-manager` $\rightarrow$ `external-dns`
 3. **Stage 3 (Cluster Operations)**: `system-upgrade` $\rightarrow$ `version-checker`
 4. **Stage 4 (Storage — Strictly Sequential Minor Versions)**: `longhorn` (`1.11.x` $\rightarrow$ `1.12.x` $\rightarrow$ `1.13.x`)
@@ -59,16 +62,16 @@ Every modified `Application` must reach `SYNC STATUS: Synced` and `HEALTH STATUS
 Never proceed to the next Longhorn minor version until all four checks pass:
 ```bash
 # 1. Confirm Longhorn internal version setting matches target minor version
-kubectl get settings.longhorn.io -n longhorn-system current-longhorn-version
+kubectl get settings.longhorn.io -n longhorn current-longhorn-version
 
 # 2. Confirm all manager, driver, CSI, and engine-image DaemonSets/Deployments are Ready
-kubectl get daemonset,deployment -n longhorn-system
+kubectl get daemonset,deployment -n longhorn
 
 # 3. Confirm EngineImage CRD is fully deployed
-kubectl get engineimages.longhorn.io -n longhorn-system
+kubectl get engineimages.longhorn.io -n longhorn
 
 # 4. Confirm all PVCs/Volumes are attached and healthy
-kubectl get volumes.longhorn.io -n longhorn-system -o custom-columns=NAME:.metadata.name,STATE:.status.state,ROBUSTNESS:.status.robustness,ENGINE:.spec.image
+kubectl get volumes.longhorn.io -n longhorn -o custom-columns=NAME:.metadata.name,STATE:.status.state,ROBUSTNESS:.status.robustness,ENGINE:.spec.image
 ```
 
 #### Grafana Sidecar Dashboard Verification

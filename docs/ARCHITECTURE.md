@@ -12,6 +12,7 @@ This document illustrates the GitOps application hierarchy, network/ingress flow
 flowchart TD
     subgraph Tier0["Tier 0: Bootstrap (argocd-base/)"]
         ArgoCD["argocd (argo-cd 10.14.0)<br/>ns: argocd"]
+        Nodes["nodes (ServerSideApply)<br/>path: nodes/ | proj: nodes"]
         RootEssentials["argocd-cluster-essentials<br/>path: cluster-essentials/"]
         RootDeployments["argocd-deployments<br/>path: deployments/"]
     end
@@ -22,7 +23,7 @@ flowchart TD
         Traefik["traefik (42.3.1) + dashboard<br/>ns: traefik"]
         CertManager["cert-manager (v1.21.3) + cluster-issuer<br/>ns: cert-manager"]
         ExternalDNS["external-dns (1.23.0)<br/>ns: external-dns"]
-        Longhorn["longhorn (1.13.0) + storage-nodes<br/>ns: longhorn-system"]
+        Longhorn["longhorn (1.13.0) + storage-nodes<br/>ns: longhorn"]
         SysUpgrade["system-upgrade (v0.21.0)<br/>ns: system-upgrade"]
         Prometheus["prometheus (29.41.0)<br/>ns: prometheus"]
         VersionChecker["version-checker (v0.11.0)<br/>ns: version-checker"]
@@ -70,6 +71,7 @@ flowchart TD
 | `AppProject` | Manifest | Permitted Source Repos | Target Namespaces |
 |--------------|----------|------------------------|-------------------|
 | `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `*` | `argocd` |
+| `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `git@github.com:MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
 | `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
 | `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `influxdb`, `grafana`, `automqttion`) |
