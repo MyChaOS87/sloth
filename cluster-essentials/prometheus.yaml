@@ -31,6 +31,14 @@ spec:
             enabled: true
             size: 100Gi
             storageClass: longhorn
+        prometheus-node-exporter:
+          nodeSelector:
+            node-role.kubernetes.io/monitoring: "true"
+          tolerations:
+            - effect: NoSchedule
+              operator: Exists
+            - key: dedicated
+              operator: Exists
   syncPolicy:
     automated:
       prune: true

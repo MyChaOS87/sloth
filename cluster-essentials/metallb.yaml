@@ -14,6 +14,8 @@ spec:
           podAnnotations:
             use-metadata.version-checker.io/metallb-controller: "true"
         speaker:
+          nodeSelector:
+            node-role.kubernetes.io/speaker: "true"
           podAnnotations:
             use-metadata.version-checker.io/metallb-speaker: "true"
           secretName: memberlist

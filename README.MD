@@ -111,7 +111,7 @@ sudo apt install vim net-tools tshark tcpdump iftop
 as this is a HA cluster, we want to use metalLB so we disable the serviceLB
 ```bash
 # On the first node:
-curl -sfL https://get.k3s.io | sh -s - --disable traefik --disable servicelb server --cluster-init 
+curl -sfL https://get.k3s.io | sh -s - server --disable traefik --disable servicelb --cluster-init
 
 
 # retrieve token
@@ -119,8 +119,9 @@ sudo cat /var/lib/rancher/k3s/server/token | sed -e "s/.*::server://g"
 ```
 ```bash
 # on the other nodes:
-curl -sfL https://get.k3s.io | K3S_TOKEN=<SECRET FROM ABOVE> sh -s - --disable traefik --disable servicelb server --server https://rock5b-but.lan:6443
+curl -sfL https://get.k3s.io | K3S_TOKEN=<SECRET FROM ABOVE> sh -s - server --disable traefik --disable servicelb --server https://rock5b-but.lan:6443
 ```
+*(Node roles `storage`, `speaker`, and `monitoring` are reconciled declaratively by Argo CD via [`argocd-base/nodes.yaml`](./argocd-base/nodes.yaml) and [`nodes/`](./nodes/)).*
 
 ## Prepare Cluster Prerequisites
 ### Longhorn Preparation
