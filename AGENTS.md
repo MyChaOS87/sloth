@@ -1,6 +1,6 @@
 # Sloth Agent Guide
 
-> **Executive Summary**: `sloth` (*SLightly Over-engineered "Trivial" Home automation*) is a GitOps-managed K3s high-availability Kubernetes cluster running on a 3-node Radxa Rock5B (`linux/arm64`) cluster. It reconciles core cluster infrastructure (Argo CD, Sealed Secrets, MetalLB, Traefik, Cert-Manager, ExternalDNS, Longhorn, System Upgrade Controller, Prometheus) and smarthome/SSO workloads (Keycloak, Mosquitto, Telegraf, InfluxDB, Grafana, Automqttion) via Argo CD's App-of-Apps pattern.
+> **Executive Summary**: `sloth` (*SLightly Over-engineered "Trivial" Home automation*) is a GitOps-managed K3s high-availability Kubernetes cluster running on a 3-node Radxa Rock5B (`linux/arm64`) cluster. It reconciles core cluster infrastructure (Argo CD, Sealed Secrets, Declarative Nodes, MetalLB, Traefik, Cert-Manager, ExternalDNS, Longhorn, System Upgrade Controller, Prometheus) and smarthome/SSO workloads (Keycloak, Mosquitto, Telegraf, InfluxDB, Grafana, Automqttion) via Argo CD's App-of-Apps pattern.
 
 ---
 
@@ -10,6 +10,7 @@
 2. **ARM64 Multi-Arch Discipline**: All nodes are `linux/arm64` (Radxa Rock5B RK3588). Every image and Helm chart upgrade must provide valid `linux/arm64` entries in its OCI manifest index.
 3. **Sequential Storage & Control-Plane Safety**: Distributed block storage (`longhorn`) enforces strict sequential minor-version upgrades (`target_minor - current_minor <= 1`). Control-plane components (`sealed-secrets`, `argo-cd`) must be upgraded and healthy before upgrading downstream workloads.
 4. **Encrypted Secrets at Rest**: All credentials, TLS/SSH keys, and cloud service accounts are stored as Bitnami `SealedSecret` manifests (`*.sealed.json`) encrypted against the cluster's `sealed-secrets` controller key.
+5. **Mandatory Post-Change Cluster Monitoring**: Whenever any change is pushed to `origin/main` (or applied to the cluster), you **must** actively monitor the live cluster (`kubectl get applications -n argocd`, pod rollouts, DaemonSet scheduling, and `system-upgrade` jobs/plans) until all affected Argo CD Applications reach `Synced` + `Healthy` and all rollout/upgrade pods settle cleanly without errors or crash loops. Never consider a task complete immediately after `git push`.
 
 ---
 
@@ -19,7 +20,7 @@ Read the specific guide below that matches your current task before modifying an
 
 | Document | Scope & When to Read |
 |----------|----------------------|
-| [`CONTEXT.md`](./CONTEXT.md) | **Domain Glossary & Ubiquitous Language**: Hardware node inventory (`rock5b-but`, `rock5b-first`, `rock5b-coffee`), K3s HA control plane, App-of-Apps hierarchy (`argocd-base`, `cluster-essentials`, `deployments`), MetalLB IP pools (`192.168.1.30–99`), split-horizon DNS (`vogelherdweg.de`), SealedSecrets, and smarthome telemetry sources (Shelly Gen1/Plus/BLU, WARP2 Wallbox, Pluggit Modbus). |
+| [`CONTEXT.md`](./CONTEXT.md) | **Domain Glossary & Ubiquitous Language**: Hardware node inventory (`rock5b-but`, `rock5b-first`, `rock5b-coffee`), declarative node roles (`storage`, `speaker`, `monitoring`), K3s HA control plane, App-of-Apps hierarchy (`argocd-base`, `nodes`, `cluster-essentials`, `deployments`), MetalLB IP pools (`192.168.1.30–99`), split-horizon DNS (`vogelherdweg.de`), SealedSecrets, and smarthome telemetry sources (Shelly Gen1/Plus/BLU, WARP2 Wallbox, Pluggit Modbus). |
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | **System Architecture**: 3-tier Argo CD App-of-Apps DAG, ingress/TLS/DNS architecture (MetalLB $\rightarrow$ Traefik $\rightarrow$ Cert-Manager + ExternalDNS on GCP Cloud DNS), Longhorn distributed block storage layout, and Smarthome MQTT/Modbus $\rightarrow$ Telegraf $\rightarrow$ InfluxDB $\rightarrow$ Grafana pipeline. |
 | [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) | **Manifest, Dashboard & Query Standards**: Argo CD `Application` single-source vs multi-source structure, `syncPolicy` rules, ExternalDNS & MetalLB annotations, Grafana dashboard ConfigMap conventions, high-contrast color palettes, and Flux query rules (telemetry gap protection, midnight alignment, legend naming). |
 | [`docs/TESTING.md`](./docs/TESTING.md) | **Verification & GitOps Validation Tiers**: 3-tier validation model (Tier 1 offline `helm template` / `kubectl kustomize` / `yq` schema checks, Tier 2 staged Argo CD reconciliation & rollout checks, Tier 3 deep storage & runtime health verification), rollback playbook, and backlog tracking on GitHub Project #1. |
@@ -32,6 +33,7 @@ Read the specific guide below that matches your current task before modifying an
 - **Branching Strategy**: Work directly on `main` (or short-lived branches fast-forward merged into `main`) to maintain a clean linear history.
 - **Pre-Commit Verification**: Always render modified Helm values or Kustomize overlays locally (`helm template` / `kubectl kustomize`) and verify `git diff` before committing.
 - **No Unapproved Push**: **Never run `git push` without explicit user permission.** Because Argo CD tracks `HEAD` on `origin/main` with automated `syncPolicy`, pushing immediately mutates the live home cluster.
+- **Post-Push Live Verification**: After every approved `git push`, refresh and monitor Argo CD applications (`kubectl get applications -n argocd -o wide`), workload rollouts, and upgrade plans until the cluster is `Synced` and `Healthy`.
 
 ---
 
