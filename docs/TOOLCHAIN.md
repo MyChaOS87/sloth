@@ -51,7 +51,16 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 
 ---
 
-## 4. Version Audit Script (`check-helm-chart-versions.sh`)
+## 4. Edge Node Provisioning (`node-bootstrap/pi0-lcn/`)
+
+| File | Target Hardware | Purpose |
+|------|-----------------|---------|
+| [`node-bootstrap/pi0-lcn/prepare-boot.sh`](../node-bootstrap/pi0-lcn/prepare-boot.sh) | Raspberry Pi Zero 2 W (`pi0-lcn`, DietPi 64-bit `ARMv8` Trixie) | Populates a mounted DietPi SD card boot partition interactively (or from an optional `.secrets/pi0-lcn.env`) with `config.txt`, `cmdline.txt`, `dietpi.txt`, `dietpi-wifi.txt`, `99-lcn-pku.rules`, `playbook.yml`, `k3s-vars.yml`, and `Automation_Custom_Script.sh`. |
+| [`node-bootstrap/pi0-lcn/playbook.yml`](../node-bootstrap/pi0-lcn/playbook.yml) | Raspberry Pi Zero 2 W (`pi0-lcn`, DietPi 64-bit `ARMv8` Trixie) | Idempotent Ansible playbook (`ansible-core` / `ansible.builtin.*`) executed both locally on first boot (`ansible-playbook --connection=local -i localhost, -e @/boot/firmware/k3s-vars.yml /boot/firmware/playbook.yml`) and remotely over SSH on Day 2 (`ansible-playbook -i pi0-lcn, -u kasch --become node-bootstrap/pi0-lcn/playbook.yml`). Configures `sshd`, user `kasch` (`sudo` + `dialout`), `/dev/lcn-pku` udev rules, containerd v3 USB serial cgroup drop-in (`config-v3.toml.d/10-serial.toml`), and K3s agent (`taint: dedicated=lcn-serial:NoExecute`, 512 MB RAM reservations). Node role labels (`lcn-serial`, `monitoring`) are managed declaratively via [`nodes/pi0-lcn.yaml`](../nodes/pi0-lcn.yaml). |
+
+---
+
+## 5. Version Audit Script (`check-helm-chart-versions.sh`)
 
 [`check-helm-chart-versions.sh`](../check-helm-chart-versions.sh) scans all Argo CD `Application` YAML manifests across `argocd-base/`, `cluster-essentials/`, and `deployments/` and compares their `targetRevision` against upstream Helm repositories and GitHub Releases:
 

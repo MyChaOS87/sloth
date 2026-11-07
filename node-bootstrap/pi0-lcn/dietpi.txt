@@ -1,0 +1,30 @@
+# DietPi Unattended Automation Config for pi0-lcn (Raspberry Pi Zero 2 W)
+AUTO_SETUP_LOCALE=C.UTF-8
+AUTO_SETUP_KEYBOARD_LAYOUT=us
+AUTO_SETUP_TIMEZONE=Europe/Berlin
+
+# Network configuration (Wi-Fi enabled via dietpi-wifi.txt)
+AUTO_SETUP_NET_ETHERNET_ENABLED=0
+AUTO_SETUP_NET_WIFI_ENABLED=1
+AUTO_SETUP_NET_WIFI_COUNTRY_CODE=DE
+AUTO_SETUP_NET_USESTATIC=0
+AUTO_SETUP_NET_HOSTNAME=pi0-lcn
+
+# Headless & In-RAM compressed zram swap (1 = auto 50% RAM on /dev/zram0, 0 SD card writes)
+AUTO_SETUP_BOOT_WAIT_FOR_NETWORK=1
+AUTO_SETUP_SWAPFILE_SIZE=1
+AUTO_SETUP_SWAPFILE_LOCATION=zram
+AUTO_SETUP_HEADLESS=1
+
+# Software & Logging (DietPi-RAMlog (-2) keeps /var/log in tmpfs; OpenSSH Server (-2) enables sshd)
+AUTO_SETUP_LOGGING_INDEX=-2
+AUTO_SETUP_RAMLOG_MAXSIZE=32
+AUTO_SETUP_SSH_SERVER_INDEX=-2
+AUTO_SETUP_SSH_PUBKEY=ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAMmYsSPJEdaCH02B3S3cFkZLNgR+N2nCmsIiUNDHpYK kasch@cirilla
+
+# Unattended execution & custom first-boot script (0 = execute /boot/Automation_Custom_Script.sh)
+AUTO_SETUP_AUTOMATED=1
+AUTO_SETUP_GLOBAL_PASSWORD=__DIETPI_PASSWORD__
+AUTO_SETUP_CUSTOM_SCRIPT_EXEC=0
+CONFIG_GPU_MEM=16
+SURVEY_OPTED_IN=0

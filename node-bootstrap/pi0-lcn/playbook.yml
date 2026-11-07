@@ -1,0 +1,237 @@
+---
+# Ansible playbook for pi0-lcn (Raspberry Pi Zero 2 W, DietPi 64-bit Trixie).
+# Runs both:
+#   1. Zero-touch on first boot via Automation_Custom_Script.sh:
+#      ansible-playbook --connection=local -i localhost, -e @/boot/firmware/k3s-vars.yml /boot/firmware/playbook.yml
+#   2. Day-2 remotely from workstation over SSH:
+#      ansible-playbook -i pi0-lcn, -u kasch --become node-bootstrap/pi0-lcn/playbook.yml
+- name: Configure pi0-lcn edge K3s agent node
+  hosts: all
+  become: true
+  vars:
+    k3s_url: "https://192.168.1.21:6443"
+    k3s_token: ""
+    k3s_version: ""
+    kasch_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAMmYsSPJEdaCH02B3S3cFkZLNgR+N2nCmsIiUNDHpYK kasch@cirilla"
+
+  tasks:
+    - name: Install required base packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - jq
+          - openssh-server
+          - sudo
+        state: present
+        install_recommends: false
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure OpenSSH server (sshd) is enabled and running
+      ansible.builtin.service:
+        name: ssh
+        enabled: true
+        state: started
+
+    - name: Ensure required system groups exist
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - sudo
+        - dialout
+
+    - name: Ensure user 'kasch' exists with sudo and dialout groups
+      ansible.builtin.user:
+        name: kasch
+        shell: /bin/bash
+        groups:
+          - sudo
+          - dialout
+        append: true
+        create_home: true
+        state: present
+
+    - name: Configure passwordless sudo for user 'kasch'
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/90-kasch
+        content: "kasch ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "/usr/sbin/visudo -cf %s"
+
+    - name: Ensure /home/kasch/.ssh directory exists
+      ansible.builtin.file:
+        path: /home/kasch/.ssh
+        state: directory
+        owner: kasch
+        group: kasch
+        mode: "0700"
+
+    - name: Install authorized_keys for user 'kasch'
+      ansible.builtin.copy:
+        dest: /home/kasch/.ssh/authorized_keys
+        content: "{{ kasch_ssh_pubkey }}\n"
+        owner: kasch
+        group: kasch
+        mode: "0600"
+
+    - name: Ensure required configuration directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - /etc/udev/rules.d
+        - /etc/systemd/journald.conf.d
+        - /etc/rancher/k3s
+        - /etc/rancher/k3s/config.d
+        - /etc/containerd
+        - /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d
+
+    - name: Cap tmpfs mounts (/tmp=64M, /var/log=32M) in /etc/fstab to protect 512 MB RAM
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - regexp: '^(tmpfs\s+/tmp\s+tmpfs\s+)size=[^,\s]+(.*)$'
+          replace: '\g<1>size=64M\g<2>'
+        - regexp: '^(tmpfs\s+/var/log\s+tmpfs\s+)size=[^,\s]+(.*)$'
+          replace: '\g<1>size=32M\g<2>'
+      notify: Remount tmpfs directories
+
+    - name: Cap systemd-journald volatile memory usage to 16M
+      ansible.builtin.copy:
+        dest: /etc/systemd/journald.conf.d/10-ram-cap.conf
+        content: |
+          [Journal]
+          Storage=volatile
+          RuntimeMaxUse=16M
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart systemd-journald
+
+    - name: Install udev rule for LCN-PKU USB serial coupler (/dev/lcn-pku)
+      ansible.builtin.copy:
+        src: 99-lcn-pku.rules
+        dest: /etc/udev/rules.d/99-lcn-pku.rules
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload udev rules
+
+    - name: Write K3s cluster join credentials when k3s_token is provided
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.d/00-join.yaml
+        content: |
+          server: {{ k3s_url | to_json }}
+          token: {{ k3s_token | to_json }}
+        owner: root
+        group: root
+        mode: "0600"
+      when: k3s_token | length > 0
+      notify: Restart k3s-agent
+
+    - name: Configure K3s agent node taint and 512 MB RAM reservations
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.yaml
+        content: |
+          node-name: "pi0-lcn"
+          node-taint:
+            - "dedicated=lcn-serial:NoExecute"
+          kubelet-arg:
+            - "kube-reserved=cpu=50m,memory=128Mi"
+            - "system-reserved=cpu=50m,memory=64Mi"
+            - "eviction-hard=memory.available<32Mi,nodefs.available<5%"
+            - "image-gc-high-threshold=70"
+            - "image-gc-low-threshold=50"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart k3s-agent
+
+    - name: Check if K3s binary is already installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/k3s
+      register: k3s_bin
+
+    - name: Require explicit k3s_version on initial K3s installation
+      ansible.builtin.assert:
+        that:
+          - k3s_version | length > 0
+        fail_msg: "k3s_version must be set on initial installation to prevent version skew against control-plane servers."
+      when: not k3s_bin.stat.exists
+
+    - name: Install K3s agent binary and systemd service
+      ansible.builtin.shell:
+        cmd: curl -sfL https://get.k3s.io | sh -s - agent
+        creates: /usr/local/bin/k3s
+      environment:
+        K3S_URL: "{{ k3s_url }}"
+        K3S_TOKEN: "{{ k3s_token }}"
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_SKIP_START: "true"
+
+    - name: Generate containerd OCI base spec with USB serial cgroup whitelist (major 188 & 166)
+      ansible.builtin.shell:
+        cmd: |
+          set -eu
+          tmp="$(mktemp)"
+          k3s ctr oci spec | jq '.linux.resources.devices += [{"allow": true, "type": "c", "major": 188, "access": "rwm"}, {"allow": true, "type": "c", "major": 166, "access": "rwm"}]' > "${tmp}"
+          if [ ! -f /etc/containerd/cri-base.json ] || ! cmp -s "${tmp}" /etc/containerd/cri-base.json; then
+            mv "${tmp}" /etc/containerd/cri-base.json
+            chmod 0644 /etc/containerd/cri-base.json
+            echo "CHANGED"
+          else
+            rm -f "${tmp}"
+          fi
+      register: cri_base_result
+      changed_when: "'CHANGED' in cri_base_result.stdout"
+      notify: Restart k3s-agent
+
+    - name: Configure K3s containerd v3 drop-in to use /etc/containerd/cri-base.json
+      ansible.builtin.copy:
+        dest: /var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d/10-serial.toml
+        content: |
+          [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
+            base_runtime_spec = "/etc/containerd/cri-base.json"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart k3s-agent
+
+    - name: Ensure k3s-agent service is enabled and running
+      ansible.builtin.service:
+        name: k3s-agent
+        enabled: true
+        state: started
+
+  handlers:
+    - name: Remount tmpfs directories
+      ansible.builtin.shell:
+        cmd: |
+          mount -o remount /tmp
+          mount -o remount /var/log
+
+    - name: Restart systemd-journald
+      ansible.builtin.service:
+        name: systemd-journald
+        state: restarted
+
+    - name: Reload udev rules
+      ansible.builtin.shell:
+        cmd: |
+          udevadm control --reload-rules || true
+          udevadm trigger --subsystem-match=tty || true
+
+    - name: Restart k3s-agent
+      ansible.builtin.service:
+        name: k3s-agent
+        enabled: true
+        state: restarted

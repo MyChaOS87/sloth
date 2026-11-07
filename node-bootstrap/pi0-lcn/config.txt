@@ -1,0 +1,13 @@
+# 64-bit ARMv8 kernel mode
+arm_64bit=1
+
+# Minimum VideoCore IV cut-down headless firmware (16 MiB hardware floor)
+gpu_mem=16
+
+# Disable Linux DRM/KMS display & CMA framebuffer allocation
+disable_fw_kms_setup=1
+max_framebuffers=0
+
+# Disable onboard Bluetooth and audio (headless USB serial node)
+dtoverlay=disable-bt
+dtparam=audio=off
