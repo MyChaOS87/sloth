@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reverselcn
+  namespace: argocd
+spec:
+  destination:
+    namespace: reverselcn
+    server: https://kubernetes.default.svc
+  project: smarthome
+  source:
+    repoURL: https://mychaos87.github.io/reverseLCN
+    targetRevision: 0.0.3
+    chart: reverselcn
+    helm:
+      values: |
+        env:
+          - name: LCN_MQTT_BROKER
+            value: "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
+          - name: LCN_SERIAL_PORT
+            value: "/dev/lcn-pku"
+        nodeSelector:
+          node-role.kubernetes.io/lcn-serial: "true"
+        tolerations:
+          - key: "dedicated"
+            operator: "Equal"
+            value: "lcn-serial"
+            effect: "NoExecute"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
