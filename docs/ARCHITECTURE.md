@@ -120,11 +120,30 @@ sequenceDiagram
 
 ---
 
-## 3. Distributed Block Storage Architecture (Longhorn)
+## 3. Declarative Node Roles & Rolling Upgrade Architecture
+
+`sloth` separates node capabilities into explicit single-purpose roles managed via Server-Side Apply ([`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml), `AppProject: nodes`, `sync-wave: "-1"`, `Prune=false,Delete=false`):
+
+| Role Label | Assigned Nodes | Consuming DaemonSet / Component | Taint Handling |
+|------------|----------------|---------------------------------|----------------|
+| `node-role.kubernetes.io/storage: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`longhorn`](../cluster-essentials/longhorn.yaml) (`longhornManager`, `longhornDriver`) | Untainted control-plane/storage nodes |
+| `node-role.kubernetes.io/speaker: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`metallb`](../cluster-essentials/metallb.yaml) (`speaker.nodeSelector`) | Untainted wired LAN nodes |
+| `node-role.kubernetes.io/monitoring: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`prometheus`](../cluster-essentials/prometheus.yaml) (`prometheus-node-exporter.nodeSelector`) | Tolerates `effect: NoSchedule` and `key: dedicated` (`operator: Exists`) |
+
+- **Two-Phase `v1/Node` Registration**:
+  - Applying a `v1/Node` manifest via `ServerSideApply=true` before a physical node has joined creates a bare `NotReady` node in Kubernetes and bypasses kubelet's initial cloud-provider registration taint. Only nodes that have already joined the cluster are declared in [`nodes/`](../nodes/), and each `v1/Node` manifest carries `argocd.argoproj.io/sync-options: Prune=false,Delete=false` so even a cascade delete of the `nodes` Application can never delete a live node.
+- **Rolling K3s Upgrades ([`cluster-essentials/system-upgrade-config/`](../cluster-essentials/system-upgrade-config/))**:
+  - [`k3s.yaml`](../cluster-essentials/system-upgrade-config/k3s.yaml): `server-plan` upgrades control-plane nodes (`cordon: true`), and `agent-plan` (`tolerations: [{ key: dedicated, operator: Exists }]`, `cordon: true`) upgrades K3s on agent nodes after `server-plan` completes.
+
+---
+
+## 4. Distributed Block Storage Architecture (Longhorn)
 
 Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed Rock5B nodes:
 
-- **Declarative Node Configuration**: [`cluster-essentials/longhorn-config/`](../cluster-essentials/longhorn-config/) defines `nodes.longhorn.io/v1beta2` CRDs for [`rock5b-but.yaml`](../cluster-essentials/longhorn-config/rock5b-but.yaml), [`rock5b-first.yaml`](../cluster-essentials/longhorn-config/rock5b-first.yaml), and [`rock5b-coffee.yaml`](../cluster-essentials/longhorn-config/rock5b-coffee.yaml).
+- **Declarative Node Configuration**:
+  - [`nodes/`](../nodes/) assigns `node-role.kubernetes.io/storage: "true"` to the 3 Rock5B nodes via Server-Side Apply, and [`cluster-essentials/longhorn.yaml`](../cluster-essentials/longhorn.yaml) restricts `longhornManager` and `longhornDriver` to `node-role.kubernetes.io/storage: "true"`.
+  - [`cluster-essentials/longhorn-config/`](../cluster-essentials/longhorn-config/) defines `nodes.longhorn.io/v1beta2` CRDs for [`rock5b-but.yaml`](../cluster-essentials/longhorn-config/rock5b-but.yaml), [`rock5b-first.yaml`](../cluster-essentials/longhorn-config/rock5b-first.yaml), and [`rock5b-coffee.yaml`](../cluster-essentials/longhorn-config/rock5b-coffee.yaml).
 - **Disk Layout**:
   - `default-disk-1`: Mounted at `/var/lib/longhorn/disk0/` (`allowScheduling: true`, `storageReserved: 0`) on the dedicated `ext4` NVMe partition.
   - Root filesystem disk: `/var/lib/longhorn/` (`allowScheduling: true`, `storageReserved: 53687091200` = 50 GiB reserved for OS/K3s).
@@ -135,7 +154,7 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
 
 ---
 
-## 4. Smarthome Telemetry Pipeline
+## 5. Smarthome Telemetry Pipeline
 
 ```mermaid
 flowchart LR

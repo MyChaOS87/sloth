@@ -13,6 +13,12 @@ spec:
       values: |
         defaultSettings:
           createDefaultDiskLabeledNodes: true
+        longhornManager:
+          nodeSelector:
+            node-role.kubernetes.io/storage: "true"
+        longhornDriver:
+          nodeSelector:
+            node-role.kubernetes.io/storage: "true"
         ingress:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
