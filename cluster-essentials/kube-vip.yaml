@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-vip
+  namespace: argocd
+spec:
+  destination:
+    namespace: kube-system
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: https://kube-vip.github.io/helm-charts
+    chart: kube-vip
+    targetRevision: 0.11.2
+    helm:
+      values: |
+        config:
+          address: "192.168.1.20"
+        env:
+          vip_interface: "enP4p65s0"
+          vip_arp: "true"
+          lb_enable: "false"
+          cp_enable: "true"
+          cp_namespace: "kube-system"
+          svc_enable: "false"
+          vip_leaderelection: "true"
+          vip_leaseduration: "5"
+          vip_renewdeadline: "3"
+          vip_retryperiod: "1"
+        nodeSelector:
+          node-role.kubernetes.io/control-plane: "true"
+        tolerations:
+          - effect: NoSchedule
+            operator: Exists
+          - effect: NoExecute
+            operator: Exists
+        podAnnotations:
+          use-metadata.version-checker.io/kube-vip: "true"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

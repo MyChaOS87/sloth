@@ -9,7 +9,7 @@
   hosts: all
   become: true
   vars:
-    k3s_url: "https://192.168.1.21:6443"
+    k3s_url: "https://192.168.1.20:6443"
     k3s_token: ""
     k3s_version: ""
     node_ip: "192.168.1.24"
