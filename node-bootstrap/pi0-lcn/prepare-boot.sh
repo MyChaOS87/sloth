@@ -20,7 +20,7 @@ if [[ -f "${ENV_FILE}" ]]; then
   source "${ENV_FILE}"
 fi
 
-: "${K3S_URL:=https://192.168.1.21:6443}"
+: "${K3S_URL:=https://192.168.1.20:6443}"
 : "${K3S_VERSION:=v1.37.2+k3s1}"
 
 if [[ -z "${WIFI_SSID:-}" ]]; then
