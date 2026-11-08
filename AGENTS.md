@@ -25,6 +25,7 @@ Read the specific guide below that matches your current task before modifying an
 | [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) | **Manifest, Dashboard & Query Standards**: Argo CD `Application` single-source vs multi-source structure, `syncPolicy` rules, ExternalDNS & MetalLB annotations, Grafana dashboard ConfigMap conventions, high-contrast color palettes, and Flux query rules (telemetry gap protection, midnight alignment, legend naming). |
 | [`docs/TESTING.md`](./docs/TESTING.md) | **Verification & GitOps Validation Tiers**: 3-tier validation model (Tier 1 offline `helm template` / `kubectl kustomize` / `yq` schema checks, Tier 2 staged Argo CD reconciliation & rollout checks, Tier 3 deep storage & runtime health verification), rollback playbook. |
 | [`docs/TOOLCHAIN.md`](./docs/TOOLCHAIN.md) | **Operator Toolchain & Scripts**: [`makefile`](./makefile) bootstrap/operations targets, `kubeseal` secret generation scripts (`create-and-seal-*.sh`), `check-helm-chart-versions.sh`, and local CLI requirements. |
+| [`docs/hardware/`](./docs/hardware/) | **Hardware & Node Bootstrap Guides**: [CM4 Single Node (Historic)](./docs/hardware/cm4-single-node.md), [Radxa Rock 5B HA Cluster & Kernel Switches](./docs/hardware/rock5b-cluster.md), and [Raspberry Pi Zero 2 W Edge Node (`pi0-lcn`) 512 MB RAM Hardening](./docs/hardware/pi0-lcn.md). |
 
 ---
 
