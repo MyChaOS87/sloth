@@ -4,7 +4,7 @@
 #   1. Zero-touch on first boot via Automation_Custom_Script.sh:
 #      ansible-playbook --connection=local -i localhost, -e @/boot/firmware/k3s-vars.yml /boot/firmware/playbook.yml
 #   2. Day-2 remotely from workstation over SSH:
-#      ansible-playbook -i pi0-lcn, -u kasch --become node-bootstrap/pi0-lcn/playbook.yml
+#      ansible-playbook -i pi0-lcn.lan, -u kasch --become node-bootstrap/pi0-lcn/playbook.yml
 - name: Configure pi0-lcn edge K3s agent node
   hosts: all
   become: true
@@ -139,10 +139,24 @@
       when: k3s_token | length > 0
       notify: Restart k3s-agent
 
+    - name: Check if K3s join credentials file exists
+      ansible.builtin.stat:
+        path: /etc/rancher/k3s/config.d/00-join.yaml
+      register: k3s_join_file
+
+    - name: Ensure K3s server URL in 00-join.yaml matches k3s_url
+      ansible.builtin.lineinfile:
+        path: /etc/rancher/k3s/config.d/00-join.yaml
+        regexp: '^server:'
+        line: "server: {{ k3s_url | to_json }}"
+      when: k3s_join_file.stat.exists
+      notify: Restart k3s-agent
+
     - name: Configure K3s agent node taint and 512 MB RAM reservations
       ansible.builtin.copy:
         dest: /etc/rancher/k3s/config.yaml
         content: |
+          server: {{ k3s_url | to_json }}
           node-name: "pi0-lcn"
           node-ip: {{ node_ip | to_json }}
           node-taint:
@@ -179,6 +193,13 @@
         K3S_TOKEN: "{{ k3s_token }}"
         INSTALL_K3S_VERSION: "{{ k3s_version }}"
         INSTALL_K3S_SKIP_START: "true"
+
+    - name: Ensure K3S_URL in k3s-agent.service.env matches k3s_url
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/system/k3s-agent.service.env
+        regexp: '^K3S_URL='
+        line: "K3S_URL='{{ k3s_url }}'"
+      notify: Restart k3s-agent
 
     - name: Generate containerd OCI base spec with USB serial cgroup whitelist (major 188 & 166)
       ansible.builtin.shell:
