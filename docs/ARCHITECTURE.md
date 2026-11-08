@@ -19,10 +19,11 @@ flowchart TD
 
     subgraph Tier1["Tier 1: Cluster Essentials (cluster-essentials/)"]
         SealedSecrets["sealed-secrets (2.22.0)<br/>ns: kube-system"]
+        KubeVIP["kube-vip (0.11.2)<br/>ns: kube-system | VIP: 192.168.1.20"]
         MetalLB["metallb (0.16.2) + metallb-config<br/>ns: metallb"]
         Traefik["traefik (42.3.1) + dashboard<br/>ns: traefik"]
         CertManager["cert-manager (v1.21.3) + cluster-issuer<br/>ns: cert-manager"]
-        ExternalDNS["external-dns (1.23.0)<br/>ns: external-dns"]
+        ExternalDNS["external-dns (1.23.0) + external-dns-config<br/>ns: external-dns"]
         Longhorn["longhorn (1.13.0) + storage-nodes<br/>ns: longhorn"]
         SysUpgrade["system-upgrade (v0.21.0)<br/>ns: system-upgrade"]
         Prometheus["prometheus (29.41.0)<br/>ns: prometheus"]
@@ -48,6 +49,7 @@ flowchart TD
     end
 
     RootEssentials --> SealedSecrets
+    RootEssentials --> KubeVIP
     RootEssentials --> MetalLB
     RootEssentials --> Traefik
     RootEssentials --> CertManager
@@ -111,6 +113,7 @@ sequenceDiagram
 
 | Service | Hostname / IP | Exposure Mechanism | TLS / Auth |
 |---------|---------------|--------------------|------------|
+| **K3s Control-Plane API** | `192.168.1.20:6443` (`api.internal.k8s.vogelherdweg.de`, `api.rock.k8s.vogelherdweg.de`) | `kube-vip` L2 ARP Leader Lease (`plndr-cp-lock` on `enP4p65s0`) + `ExternalName` DNS Service | K3s Cluster CA TLS (`:6443`) |
 | **Argo CD UI/API** | `argocd.rock.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
 | **Traefik Dashboard** | `traefik.rock.k8s.vogelherdweg.de` | Traefik `IngressRoute` | HTTP / Internal LAN |
 | **Longhorn UI** | `longhorn.rock.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS |

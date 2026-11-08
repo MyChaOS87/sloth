@@ -25,6 +25,7 @@ Read the specific guide below that matches your current task before modifying an
 | [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) | **Manifest, Dashboard & Query Standards**: Argo CD `Application` single-source vs multi-source structure, `syncPolicy` rules, ExternalDNS & MetalLB annotations, Grafana dashboard ConfigMap conventions, high-contrast color palettes, and Flux query rules (telemetry gap protection, midnight alignment, legend naming). |
 | [`docs/TESTING.md`](./docs/TESTING.md) | **Verification & GitOps Validation Tiers**: 3-tier validation model (Tier 1 offline `helm template` / `kubectl kustomize` / `yq` schema checks, Tier 2 staged Argo CD reconciliation & rollout checks, Tier 3 deep storage & runtime health verification), rollback playbook, and backlog tracking on GitHub Project #1. |
 | [`docs/TOOLCHAIN.md`](./docs/TOOLCHAIN.md) | **Operator Toolchain & Scripts**: [`makefile`](./makefile) bootstrap/operations targets, `kubeseal` secret generation scripts (`create-and-seal-*.sh`), `check-helm-chart-versions.sh`, and local CLI requirements. |
+| [`docs/hardware/`](./docs/hardware/) | **Hardware & Node Bootstrap Guides**: [CM4 Single Node (Historic)](./docs/hardware/cm4-single-node.md), [Radxa Rock 5B HA Cluster & Kernel Switches](./docs/hardware/rock5b-cluster.md), and [Raspberry Pi Zero 2 W Edge Node (`pi0-lcn`) 512 MB RAM Hardening](./docs/hardware/pi0-lcn.md). |
 
 ---
 
@@ -43,7 +44,7 @@ Read the specific guide below that matches your current task before modifying an
 |------------------|-----------------|-----------|
 | `git status`, `git diff`, `git log`, `git add`, `git commit` | `false` | Local workspace repository operations run cleanly inside the standard sandbox. |
 | `yq`, `jq`, Python/shell YAML inspection | `false` | Pure local file processing requires no network or external cluster access. |
-| `kubectl` (any read or write against `sloth-root` `192.168.1.21:6443`) | `true` | Requires LAN network access and access to `~/.kube/config`. |
+| `kubectl` (any read or write against `sloth-root` `api.internal.k8s.vogelherdweg.de:6443` / `192.168.1.20:6443`) | `true` | Requires LAN network access and access to `~/.kube/config`. |
 | `helm repo add/update`, `helm search repo`, `helm template` (remote chart) | `true` | Requires network access to upstream Helm registries and `~/.cache/helm`. |
 | `git push`, `git fetch`, `git ls-remote` | `true` | Requires SSH/HTTPS network access to GitHub (`git@github.com:MyChaOS87/sloth.git`). |
 | `./check-helm-chart-versions.sh` | `true` | Queries upstream Helm indices and GitHub Releases API over HTTPS. |
