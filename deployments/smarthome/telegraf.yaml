@@ -22,8 +22,14 @@ spec:
         config:
           agent:
             debug: true
+            metric_buffer_limit: 100000
           processors:
           outputs:
+            - influxdb:
+                urls:
+                  - "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428/influx"
+                skip_database_creation: true
+                content_encoding: "gzip"
             - influxdb_v2:
                 urls:
                   - "https://influx.rock.k8s.vogelherdweg.de"

@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: victoria-metrics
+  namespace: argocd
+spec:
+  destination:
+    namespace: victoria-metrics
+    server: https://kubernetes.default.svc
+  project: smarthome
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts/
+    targetRevision: 0.50.0
+    chart: victoria-metrics-single
+    helm:
+      releaseName: victoria-metrics
+      values: |
+        rbac:
+          create: false
+        serviceAccount:
+          create: false
+        server:
+          fullnameOverride: victoria-metrics
+          mode: deployment
+          retentionPeriod: 100y
+          extraArgs:
+            envflag.enable: true
+            envflag.prefix: VM_
+            loggerFormat: json
+            dedup.minScrapeInterval: 1s
+          persistentVolume:
+            enabled: true
+            size: 16Gi
+            storageClassName: longhorn
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    namespaces:
+                      - mosquitto
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: mosquitto
+          relabel:
+            enabled: true
+            config:
+              - action: labeldrop
+                regex: "^host$"
+              - source_labels: [__name__]
+                regex: "^temperature_temperature$"
+                replacement: "temperature_value"
+                target_label: __name__
+              - source_labels: [__name__]
+                regex: "^humidity_humidity$"
+                replacement: "humidity_value"
+                target_label: __name__
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+            hosts:
+              - name: victoria.rock.k8s.vogelherdweg.de
+                path:
+                  - /
+                port: http
+              - name: victoria.internal.k8s.vogelherdweg.de
+                path:
+                  - /
+                port: http
+            tls:
+              - secretName: victoria-rock-k8s-vogelherdweg-de-tls
+                hosts:
+                  - victoria.rock.k8s.vogelherdweg.de
+                  - victoria.internal.k8s.vogelherdweg.de
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

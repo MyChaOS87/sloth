@@ -20,6 +20,17 @@ spec:
             external-dns.alpha.kubernetes.io/hostname: mosquitto.rock.k8s.vogelherdweg.de,mosquitto.internal.k8s.vogelherdweg.de.
             external-dns.kubernetes.io/hostname: mosquitto.rock.k8s.vogelherdweg.de,mosquitto.internal.k8s.vogelherdweg.de.
           type: LoadBalancer
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: kubernetes.io/hostname
+                  namespaces:
+                    - victoria-metrics
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: victoria-metrics-single
   syncPolicy:
     automated:
       prune: true
