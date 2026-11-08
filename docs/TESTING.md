@@ -42,7 +42,7 @@ When upgrading multiple components, push and verify in dependency order rather t
 3. **Stage 3 (Cluster Operations)**: `system-upgrade` $\rightarrow$ `version-checker`
 4. **Stage 4 (Storage — Strictly Sequential Minor Versions)**: `longhorn` (`1.11.x` $\rightarrow$ `1.12.x` $\rightarrow$ `1.13.x`)
 5. **Stage 5 (Observability)**: `prometheus` $\rightarrow$ `telegraf` $\rightarrow$ `influxdb` $\rightarrow$ `grafana`
-6. **Stage 6 (SSO & Workloads)**: `keycloak` $\rightarrow$ `mosquitto` $\rightarrow$ `automqttion`
+6. **Stage 6 (SSO & Workloads)**: `keycloak` $\rightarrow$ `mosquitto` $\rightarrow$ `automqttion` $\rightarrow$ `reverselcn`
 
 #### Triggering & Inspecting Reconciliation
 ```bash

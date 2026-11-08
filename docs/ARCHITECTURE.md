@@ -44,6 +44,7 @@ flowchart TD
         InfluxDB["influxdb (influxdb2 2.1.2)<br/>ns: influxdb"]
         Grafana["grafana (6.52.2) + dashboards<br/>ns: grafana"]
         Automqttion["automqttion (0.0.5)<br/>ns: automqttion"]
+        ReverseLCN["reverselcn (0.0.3)<br/>ns: reverselcn"]
     end
 
     RootEssentials --> SealedSecrets
@@ -64,6 +65,7 @@ flowchart TD
     AppSmarthome --> InfluxDB
     AppSmarthome --> Grafana
     AppSmarthome --> Automqttion
+    AppSmarthome --> ReverseLCN
 ```
 
 ### AppProject Isolation Boundaries
@@ -74,7 +76,7 @@ flowchart TD
 | `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `git@github.com:MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
 | `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
-| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `influxdb`, `grafana`, `automqttion`) |
+| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `influxdb`, `grafana`, `automqttion`, `reverselcn`) |
 
 ---
 
@@ -128,7 +130,8 @@ sequenceDiagram
 |------------|----------------|---------------------------------|----------------|
 | `node-role.kubernetes.io/storage: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`longhorn`](../cluster-essentials/longhorn.yaml) (`longhornManager`, `longhornDriver`) | Untainted control-plane/storage nodes |
 | `node-role.kubernetes.io/speaker: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`metallb`](../cluster-essentials/metallb.yaml) (`speaker.nodeSelector`) | Untainted wired LAN nodes |
-| `node-role.kubernetes.io/monitoring: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee` | [`prometheus`](../cluster-essentials/prometheus.yaml) (`prometheus-node-exporter.nodeSelector`) | Tolerates `effect: NoSchedule` and `key: dedicated` (`operator: Exists`) |
+| `node-role.kubernetes.io/monitoring: "true"` | `rock5b-but`, `rock5b-first`, `rock5b-coffee`, `pi0-lcn` | [`prometheus`](../cluster-essentials/prometheus.yaml) (`prometheus-node-exporter.nodeSelector`) | Tolerates `effect: NoSchedule` and `key: dedicated` (`operator: Exists`) |
+| `node-role.kubernetes.io/lcn-serial: "true"` | `pi0-lcn` (tainted `dedicated=lcn-serial:NoExecute`) | [`reverselcn`](../deployments/smarthome/reverselcn.yaml) (`DaemonSet`, `maxSurge: 0`, `maxUnavailable: 1`) | Tolerates `dedicated=lcn-serial:NoExecute` |
 
 - **Two-Phase `v1/Node` Registration**:
   - Applying a `v1/Node` manifest via `ServerSideApply=true` before a physical node has joined creates a bare `NotReady` node in Kubernetes and bypasses kubelet's initial cloud-provider registration taint. Only nodes that have already joined the cluster are declared in [`nodes/`](../nodes/), and each `v1/Node` manifest carries `argocd.argoproj.io/sync-options: Prune=false,Delete=false` so even a cascade delete of the `nodes` Application can never delete a live node.
@@ -164,6 +167,11 @@ flowchart LR
         S3["Shelly BLU BLE<br/>(shellies_blu/BLE/ht/#)"]
         WB["WARP2 Wallbox<br/>(warp2/22hg/#)"]
         PL["Pluggit Ventilation<br/>(192.168.1.19:502)"]
+        LCN["LCN Bus (LCN-PKU USB)<br/>(pi0-lcn:/dev/lcn-pku)"]
+    end
+
+    subgraph EdgeBridge["Edge Serial DaemonSet (ns: reverselcn on pi0-lcn)"]
+        RLCN["reverseLCN 0.0.3<br/>(lcn/segment/# & lcn/in)"]
     end
 
     subgraph Broker["MQTT Broker (ns: mosquitto)"]
@@ -183,6 +191,8 @@ flowchart LR
         AM["Automqttion (ns: automqttion)<br/>MQTT Automation Rules"]
     end
 
+    LCN <-->|Serial 9600 8N1| RLCN
+    RLCN <-->|MQTT :1883| MQ
     S1 & S2 & S3 & WB -->|MQTT :1883| MQ
     MQ -->|MQTT Subscribe| TG
     MQ <-->|MQTT Pub/Sub| AM

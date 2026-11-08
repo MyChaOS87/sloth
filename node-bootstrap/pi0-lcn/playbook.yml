@@ -12,6 +12,7 @@
     k3s_url: "https://192.168.1.21:6443"
     k3s_token: ""
     k3s_version: ""
+    node_ip: "192.168.1.24"
     kasch_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAMmYsSPJEdaCH02B3S3cFkZLNgR+N2nCmsIiUNDHpYK kasch@cirilla"
 
   tasks:
@@ -143,6 +144,7 @@
         dest: /etc/rancher/k3s/config.yaml
         content: |
           node-name: "pi0-lcn"
+          node-ip: {{ node_ip | to_json }}
           node-taint:
             - "dedicated=lcn-serial:NoExecute"
           kubelet-arg:
