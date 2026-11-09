@@ -18,12 +18,12 @@ spec:
           enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
-          hosts: 
+          hosts:
           - grafana.k8s.lan
           - grafana.rock.k8s.vogelherdweg.de
           - grafana.internal.k8s.vogelherdweg.de
-          tls: 
-          - hosts: 
+          tls:
+          - hosts:
             - grafana.rock.k8s.vogelherdweg.de
             - grafana.internal.k8s.vogelherdweg.de
             secretName: grafana-rock-k8s-vogelherdweg-de-tls
@@ -33,14 +33,20 @@ spec:
           datatasources.yaml:
             apiVersion: 1
             datasources:
+            - name: VictoriaMetrics
+              uid: victoriametrics
+              type: prometheus
+              url: "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428"
+              isDefault: false
             - name: InfluxDB
-              type: influxdb 
+              uid: P951FEA4DE68E13C5
+              type: influxdb
               url: "https://influx.rock.k8s.vogelherdweg.de"
               jsonData:
                 version: Flux
                 organization: "influxdata"
                 defaultBucket: default
-              secureJsonData: 
+              secureJsonData:
                 token: "$INFLUX_TOKEN"
             - name: Prometheus
               type: prometheus
