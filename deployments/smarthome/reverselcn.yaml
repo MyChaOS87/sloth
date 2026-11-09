@@ -10,7 +10,7 @@ spec:
   project: smarthome
   source:
     repoURL: https://mychaos87.github.io/reverseLCN
-    targetRevision: 0.0.3
+    targetRevision: 0.0.4
     chart: reverselcn
     helm:
       values: |
