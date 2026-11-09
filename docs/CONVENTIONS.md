@@ -1,6 +1,6 @@
 # Sloth Manifest, Dashboard & Query Conventions
 
-This document defines the structural standards for Argo CD manifests, Kubernetes networking annotations, Grafana dashboard ConfigMaps, and InfluxDB Flux queries in `sloth`.
+This document defines the structural standards for Argo CD manifests, Kubernetes networking annotations, Grafana dashboard ConfigMaps, and VictoriaMetrics MetricsQL queries in `sloth`.
 
 ---
 
@@ -79,47 +79,49 @@ Services exposed directly via MetalLB `LoadBalancer` (such as [`mosquitto`](../d
 
 ---
 
-## 3. Grafana Dashboard & Flux Query Conventions
+## 3. Grafana Dashboard & MetricsQL Query Conventions
 
-Grafana dashboards live in [`deployments/smarthome/grafana-dashboards/`](../deployments/smarthome/grafana-dashboards/) as Kubernetes `ConfigMap` manifests in namespace `grafana` with label `grafana_dashboard: "1"`.
+Grafana dashboards live in [`deployments/smarthome/grafana-dashboards/`](../deployments/smarthome/grafana-dashboards/) as Kubernetes `ConfigMap` manifests in namespace `grafana` with label `grafana_dashboard: "1"` and query the `VictoriaMetrics` datasource (`type: prometheus`, `uid: victoriametrics`).
 
-### Rule 1: Telemetry Gap Protection (`integral()`)
-Defunct or restarted `telegraf` pods (which tag metrics by pod `host`) can create multi-minute gaps in series data. Calling `integral()` directly over gaps causes Flux to linearly interpolate across the gap, producing huge artificial spikes or negative anomalies.
+### Rule 1: Telemetry Gap Protection & Window-Mean Integration (`integrate(keep_last_value(avg_over_time(...)))`)
+Shelly relays and BLE sensors report on state changes or sparse intervals, creating multi-minute gaps between raw samples, while appliances like boiling-water heaters (`wasser`) or espresso machines (`kaffee`) draw power in brief 20–35 second pulses.
+- Inside a subquery `[range:step]`, always average raw samples across each `step` with `avg_over_time(m[step])` before applying `< 5000` spike filtering and `keep_last_value(...)` forward-filling (converting Watt-seconds to Watt-hours via `/ 3600`):
+  ```promql
+  integrate(keep_last_value(avg_over_time(power_value{shelly_type="relay"}[1m]) < 5000)[14d:1m]) / 3600
+  ```
+  Evaluating raw `power_value` directly inside `[range:step]` without `avg_over_time(...[step])` point-samples once per step boundary and either misses sub-minute pulses (`wasser`, `kaffee`) or stretches a single instant across a multi-minute `$__interval`.
+- **Sparse Sensor Line Continuity (`spanNulls: true`)**:
+  - For battery-powered room sensors (`Temperature`, `Humidity` in [`grafana-dashboard-environment.yaml`](../deployments/smarthome/grafana-dashboards/grafana-dashboard-environment.yaml)), set `"spanNulls": true` in `fieldConfig.defaults.custom` so Grafana connects consecutive sample points across empty `$__interval` steps.
+- **Subquery Step Sizing (`-search.maxPointsSubqueryPerTimeseries=100000`)**:
+  - Use `[1d:1m]`, `[14d:1m]`, or `[30d:1m]` (`1,440` to `43,200` points) for fixed 1–30 day windows.
+  - Use `[90d:2m]` with `avg_over_time(...[2m])` (`64,800` points) for 90-day windows so the subquery never exceeds VictoriaMetrics' 100,000-point limit.
+  - Use `[$__range:$__interval]` with `avg_over_time(...[$__interval])` for dynamic dashboard-range integrals so the step scales automatically with the user's selected time range.
 
-Always pre-aggregate into 1-minute windows and forward-fill missing points before integrating:
-```flux
-|> group(columns: ["some_tag"])
-|> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
-|> fill(usePrevious: true)
-|> group(columns: ["some_tag", "_start", "_stop"])
-|> integral(unit: 1h)
+### Rule 2: Daily Cost Bar Charts (`interval: "1d"`)
+Daily energy/cost bar charts (`drawStyle: "bars"`) set `"interval": "1d"` on the Prometheus target alongside a `[1d:1m]` integral subquery so each bar integrates a full 24-hour day:
+```promql
+label_set((integrate(keep_last_value(power_power{wallbox_name="22hg"})[1d:1m]) / 3600 / 1000) * 0.2727, "_field", "Wallbox Daily Cost")
 ```
 
-### Rule 2: Midnight-Aligned Daily Windows
-Daily energy/cost bar charts must align their query start time to local midnight (`00:00:00`) of the earliest day so the first bar represents a full 24-hour day rather than a truncated partial day:
-```flux
-import "date"
-today = date.truncate(t: now(), unit: 1d)
-start_time = date.add(d: -14d, to: today)
-
-from(bucket: "default")
-  |> range(start: start_time)
+### Rule 3: Clean Series & Legend Naming (`label_replace` / `label_set`) and Hardware-Replacement Aggregation (`avg by` / `sum by`)
+Strip hardware prefixes (`shellyplugs-`, `shellyplugm-`, `shellyplug-`, `shellyplusht-`, `shellyhtblue-`, `shellyht-`) using `label_replace` with non-capturing groups (`(?:...)`) so `$1` captures the clean room/outlet identifier, and wrap with `avg by (shelly_id)` (for instantaneous gauges) or `sum by (shelly_id)` / `sum by (_field)` (for integrated energy/cost) so leftover `topic`/`shelly_type` labels are stripped and replaced sensors in the same room merge into a single continuous historical series:
+```promql
+avg by (shelly_id) (label_replace(avg_over_time(temperature_value{shelly_type!="relay"}[$__interval]), "shelly_id", "$1", "shelly_id", "^(?:shelly(?:plugs|plugm|plug|plusht|htblue|ht)-)?(.*)"))
 ```
+For current-value stat panels (`Last Temperatures`), use a bounded lookback (`last_over_time(...[6h])`) rather than `[$__range]` so long-retired sensors are not resurrected when zooming out to multi-year ranges.
+For synthetic or multi-series unions (`Phase A..C`, `Total`, `30 Day Basis`), assign `_field` via `label_set(..., "_field", "<Name>")`, combine with `union(...)`, and set `"legendFormat": "{{_field}}"`.
 
-### Rule 3: Clean Series & Legend Naming
-Map custom human-readable series names into `_field` and group solely by `["_field"]`:
-```flux
-|> map(fn: (r) => ({ r with _field: "Phase A" }))
-|> group(columns: ["_field"])
-|> keep(columns: ["_time", "_value", "_field"])
-```
-In the Grafana panel JSON (`fieldConfig.defaults`), set:
-```json
-"displayName": "${__field.name}"
-```
-so legends render the clean series name without a `_value` prefix.
+### Rule 4: Multi-Generation Meter Bridging (`or on()`)
+When hardware upgrades change the underlying metric or schema across historical eras, bridge both series with `or on()` so multi-year queries remain continuous:
+- **House 3-Phase Meter (April 2025 Shelly 3EM $\rightarrow$ Shelly Pro 3EM Upgrade)**:
+  - Phase A: `em:0_a_act_power or on() power_value{shelly_type="emeter",sub_id="0"}`
+  - Phase B: `em:0_b_act_power or on() power_value{shelly_type="emeter",sub_id="1"}`
+  - Phase C: `em:0_c_act_power or on() power_value{shelly_type="emeter",sub_id="2"}`
+- **Per-Phase Wallbox Load Subtraction (May 2026 Per-Phase Meter Upgrade)**:
+  - Subtract actual per-phase Wallbox active power (`power_l1_power`, `power_l2_power`, `power_l3_power`) with fallback to `power_power{wallbox_name="22hg"} / 3` prior to May 2026:
+    `power_l1_power{wallbox_name="22hg"} or on() (power_power{wallbox_name="22hg"} / 3)`
 
-### Rule 4: High-Contrast Non-Repeating Panel Colors
+### Rule 5: High-Contrast Non-Repeating Panel Colors
 When multiple series appear in the same panel (or across adjacent panels in [`grafana-dashboard-power.yaml`](../deployments/smarthome/grafana-dashboards/grafana-dashboard-power.yaml) and [`grafana-dashboard-environment.yaml`](../deployments/smarthome/grafana-dashboards/grafana-dashboard-environment.yaml)), bind explicit `fixed-color` overrides (`fieldConfig.overrides`) using distinct, high-contrast named Grafana palette colors (e.g., `red`, `blue`, `green`, `orange`, `purple`, `yellow`, `light-blue`, `super-light-purple`) rather than relying on auto-assigned palette rotation.
 
 ---

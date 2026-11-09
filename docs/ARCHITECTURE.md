@@ -195,7 +195,7 @@ flowchart LR
     end
 
     subgraph Visualization["Dashboards & Automation"]
-        GF["Grafana (ns: grafana)<br/>Sidecar ConfigMaps:<br/>• grafana-dashboard-power<br/>• grafana-dashboard-environment"]
+        GF["Grafana (ns: grafana)<br/>Sidecar ConfigMaps:<br/>• grafana-dashboard-power (+ -legacy)<br/>• grafana-dashboard-environment (+ -legacy)"]
         AM["Automqttion (ns: automqttion)<br/>MQTT Automation Rules"]
     end
 
@@ -207,7 +207,8 @@ flowchart LR
     PL -->|Modbus TCP :502| TG
     TG -->|Influx Line Protocol :8428/influx| VM
     TG -->|InfluxDB v2 API :80| IDB
-    IDB -->|Flux Queries| GF
+    VM -->|MetricsQL Queries| GF
+    IDB -->|Flux Queries (-Legacy)| GF
 ```
 
 ### Telegraf Measurement Schema
