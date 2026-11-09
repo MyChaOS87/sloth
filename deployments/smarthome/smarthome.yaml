@@ -7,11 +7,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: influxdb
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: victoria-metrics
 ---
 apiVersion: v1
@@ -46,8 +41,6 @@ spec:
   destinations:
   - namespace: grafana
     server: https://kubernetes.default.svc
-  - namespace: influxdb
-    server: https://kubernetes.default.svc  
   - namespace: victoria-metrics
     server: https://kubernetes.default.svc
   - namespace: mosquitto
