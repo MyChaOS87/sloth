@@ -37,25 +37,11 @@ spec:
               uid: victoriametrics
               type: prometheus
               url: "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428"
-              isDefault: false
-            - name: InfluxDB
-              uid: P951FEA4DE68E13C5
-              type: influxdb
-              url: "https://influx.rock.k8s.vogelherdweg.de"
-              jsonData:
-                version: Flux
-                organization: "influxdata"
-                defaultBucket: default
-              secureJsonData:
-                token: "$INFLUX_TOKEN"
+              isDefault: true
             - name: Prometheus
               type: prometheus
               url: 'https://prometheus.internal.k8s.vogelherdweg.de'
         envValueFrom:
-          INFLUX_TOKEN:
-            secretKeyRef:
-              name: influxdb-secret
-              key: admin-token
           GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
             secretKeyRef:
               name: grafana-client-secret
@@ -85,9 +71,9 @@ spec:
             kubernetes-cluster:
               gnetId: 15282
               datasource: Prometheus
-            influxdb-stats:
-              gnetId: 421
-              datasource: InfluxDB
+            victoria-metrics:
+              gnetId: 10229
+              datasource: VictoriaMetrics
         sidecar:
           dashboards:
             enabled: true
@@ -114,9 +100,6 @@ spec:
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/grafana-secrets
-  - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: main
-    path: deployments/smarthome/influxdb-secrets
   - repoURL: git@github.com:MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/grafana-dashboards

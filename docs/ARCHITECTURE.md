@@ -41,9 +41,8 @@ flowchart TD
 
     subgraph Tier3_SH["Smarthome Stack (deployments/smarthome/)"]
         Mosquitto["mosquitto (local chart 2.1.2)<br/>ns: mosquitto"]
-        Telegraf["telegraf (1.8.78)<br/>ns: telegraf"]
+        Telegraf["telegraf (1.8.78, 2 replicas)<br/>ns: telegraf"]
         VictoriaMetrics["victoria-metrics (0.50.0)<br/>ns: victoria-metrics"]
-        InfluxDB["influxdb (influxdb2 2.1.2)<br/>ns: influxdb"]
         Grafana["grafana (10.5.15) + dashboards<br/>ns: grafana"]
         Automqttion["automqttion (0.0.5)<br/>ns: automqttion"]
         ReverseLCN["reverselcn (0.0.3)<br/>ns: reverselcn"]
@@ -66,7 +65,6 @@ flowchart TD
     AppSmarthome --> Mosquitto
     AppSmarthome --> Telegraf
     AppSmarthome --> VictoriaMetrics
-    AppSmarthome --> InfluxDB
     AppSmarthome --> Grafana
     AppSmarthome --> Automqttion
     AppSmarthome --> ReverseLCN
@@ -80,7 +78,7 @@ flowchart TD
 | `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `git@github.com:MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
 | `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
-| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `victoria-metrics`, `influxdb`, `grafana`, `automqttion`, `reverselcn`) |
+| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `victoria-metrics`, `grafana`, `automqttion`, `reverselcn`) |
 
 ---
 
@@ -123,7 +121,6 @@ sequenceDiagram
 | **Keycloak SSO** | `keycloak.rock.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS |
 | **Grafana** | `grafana.rock.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
 | **VictoriaMetrics UI/API** | `victoria.rock.k8s.vogelherdweg.de`, `victoria.internal.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS |
-| **InfluxDB UI/API** | `influx.rock.k8s.vogelherdweg.de` | Traefik `Ingress` | Let's Encrypt TLS |
 | **Mosquitto MQTT** | `192.168.1.30:1883` (`mqtt.rock.k8s.vogelherdweg.de`, `mqtt.internal.k8s.vogelherdweg.de`) | MetalLB `LoadBalancer` (`metallb-reserved-pool`) | TCP `:1883` |
 
 ---
@@ -158,9 +155,8 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
   - Root filesystem disk: `/var/lib/longhorn/` (`allowScheduling: true`, `storageReserved: 53687091200` = 50 GiB reserved for OS/K3s).
 - **Persistent Volume Consumers**:
   1. **VictoriaMetrics (`victoria-metrics`)**: 16 GiB PVC (`storageClassName: longhorn`, `retentionPeriod: 100y`) storing columnar time-series blocks in `victoria-metrics`.
-  2. **InfluxDB (`influxdb-influxdb2`)**: 10 GiB PVC (`storageClass: longhorn`) storing legacy time-series buckets in `influxdb`.
-  3. **Prometheus (`prometheus-server` & `storage-prometheus-alertmanager-0`)**: 100 GiB + 2 GiB Longhorn PVCs storing cluster metrics and alert state in `prometheus`.
-  4. **Grafana (`grafana`)**: 10 GiB PVC (`storageClassName: longhorn`) storing Grafana SQLite state and plugin data in `grafana`.
+  2. **Prometheus (`prometheus-server` & `storage-prometheus-alertmanager-0`)**: 100 GiB + 2 GiB Longhorn PVCs storing cluster metrics and alert state in `prometheus`.
+  3. **Grafana (`grafana`)**: 10 GiB PVC (`storageClassName: longhorn`) storing Grafana SQLite state and plugin data in `grafana`.
 
 ---
 
@@ -185,30 +181,27 @@ flowchart LR
         MQ["Eclipse Mosquitto 2.1.2-alpine<br/>192.168.1.30:1883"]
     end
 
-    subgraph Collector["Collector (ns: telegraf)"]
-        TG["Telegraf 1.8.78<br/>8x inputs.mqtt_consumer<br/>1x inputs.modbus<br/>metric_buffer_limit: 100000"]
+    subgraph Collector["Active-Active Collector (ns: telegraf)"]
+        TG["Telegraf 1.8.78 (2 Replicas)<br/>8x inputs.mqtt_consumer (ClusterIP)<br/>1x inputs.modbus (close_after_gather)<br/>metric_buffer_limit: 100000"]
     end
 
-    subgraph Storage["Time-Series DBs (ns: victoria-metrics / influxdb)"]
-        VM["VictoriaMetrics 0.50.0<br/>16Gi Longhorn PVC (retention: 100y)"]
-        IDB["InfluxDB 2.x (Legacy)<br/>org: influxdata | bucket: default (10Gi Longhorn)"]
+    subgraph Storage["Time-Series DB (ns: victoria-metrics)"]
+        VM["VictoriaMetrics 0.50.0<br/>16Gi Longhorn PVC (retention: 100y)<br/>dedup.minScrapeInterval: 1s"]
     end
 
     subgraph Visualization["Dashboards & Automation"]
-        GF["Grafana (ns: grafana)<br/>Sidecar ConfigMaps:<br/>• grafana-dashboard-power (+ -legacy)<br/>• grafana-dashboard-environment (+ -legacy)"]
+        GF["Grafana (ns: grafana)<br/>Sidecar ConfigMaps:<br/>• grafana-dashboard-power<br/>• grafana-dashboard-environment"]
         AM["Automqttion (ns: automqttion)<br/>MQTT Automation Rules"]
     end
 
     LCN <-->|Serial 9600 8N1| RLCN
     RLCN <-->|MQTT :1883| MQ
     S1 & S2 & S3 & WB -->|MQTT :1883| MQ
-    MQ -->|MQTT Subscribe| TG
+    MQ -->|ClusterIP MQTT Subscribe| TG
     MQ <-->|MQTT Pub/Sub| AM
     PL -->|Modbus TCP :502| TG
-    TG -->|Influx Line Protocol :8428/influx| VM
-    TG -->|InfluxDB v2 API :80| IDB
+    TG -->|Gzipped Line Protocol :8428/influx| VM
     VM -->|MetricsQL Queries| GF
-    IDB -->|Flux Queries (-Legacy)| GF
 ```
 
 ### Telegraf Measurement Schema

@@ -8,8 +8,8 @@ spec:
     namespace: telegraf
     server: https://kubernetes.default.svc
   project: smarthome
-  sources:
-  - repoURL: https://helm.influxdata.com/
+  source:
+    repoURL: https://helm.influxdata.com/
     targetRevision: 1.8.78
     chart: telegraf
     helm:
@@ -17,11 +17,20 @@ spec:
         - name: tplVersion
           value: "2"
       values: |
+        replicaCount: 2
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: telegraf
+                topologyKey: kubernetes.io/hostname
         service:
           enabled: false
         config:
           agent:
             debug: true
+            omit_hostname: true
             metric_buffer_limit: 100000
           processors:
           outputs:
@@ -30,17 +39,10 @@ spec:
                   - "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428/influx"
                 skip_database_creation: true
                 content_encoding: "gzip"
-            - influxdb_v2:
-                urls:
-                  - "https://influx.rock.k8s.vogelherdweg.de"
-                token: "${INFLUX_TOKEN}"
-                organization: "influxdata"
-                bucket: "default"
-                insecure_skip_verify: true
           inputs:
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies/+/+/+/power"
                   - "shellies/+/+/+/energy"
@@ -60,7 +62,7 @@ spec:
                     tags: "_/shelly_id/shelly_type/_"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "warp2/22hg/meter/values"
                 data_format: "json_v2"
@@ -74,7 +76,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "warp2/22hg/meters/0/values"
                 data_format: "json_v2"
@@ -131,7 +133,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies_plug/+/status/switch:0"
                 tags:
@@ -173,7 +175,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies_plus/+/status/temperature:0"
                 data_format: "json_v2"
@@ -184,11 +186,11 @@ spec:
                   - measurement_name: "temperature"
                     field:
                       - path: "tC"
-                        rename: "temperature"
+                        rename: "value"
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies_plus/+/status/humidity:0"
                 data_format: "json_v2"
@@ -199,11 +201,11 @@ spec:
                   - measurement_name: "humidity"
                     field:
                       - path: "rh"
-                        rename: "humidity"
+                        rename: "value"
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies_pro/+/status/em:0"
                 data_format: "json_v2"
@@ -259,7 +261,7 @@ spec:
                         type: "float"
             - mqtt_consumer:
                 servers:
-                  - "tcp://mosquitto.rock.k8s.vogelherdweg.de:1883"
+                  - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
                 topics: 
                   - "shellies_blu/BLE/ht/+"
                 data_format: "json_v2"
@@ -288,6 +290,8 @@ spec:
                 timeout: "1s"
                 controller: "tcp://192.168.1.19:502"
                 configuration_type: "register"
+                workarounds:
+                  close_connection_after_gather: true
                 holding_registers: 
                 - name: "CurrentBLState"
                   byte_order: "CDAB"
@@ -358,16 +362,7 @@ spec:
                   scale: !!float 1.0000001
                   address: 
                     - 430
-                    - 431        
-        env:        
-          - name: INFLUX_TOKEN
-            valueFrom: 
-              secretKeyRef:
-                name: influxdb-secret
-                key: admin-token
-  - repoURL: git@github.com:MyChaOS87/sloth.git
-    targetRevision: main
-    path: deployments/smarthome/influxdb-secrets
+                    - 431
   syncPolicy:
     automated:
       prune: true
