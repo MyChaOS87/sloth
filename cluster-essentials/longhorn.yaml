@@ -13,6 +13,7 @@ spec:
       values: |
         defaultSettings:
           createDefaultDiskLabeledNodes: true
+          removeSnapshotsDuringFilesystemTrim: true
         longhornManager:
           nodeSelector:
             node-role.kubernetes.io/storage: "true"

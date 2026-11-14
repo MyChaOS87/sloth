@@ -149,7 +149,7 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
 
 - **Declarative Node Configuration**:
   - [`nodes/`](../nodes/) assigns `node-role.kubernetes.io/storage: "true"` to the 3 Rock5B nodes via Server-Side Apply, and [`cluster-essentials/longhorn.yaml`](../cluster-essentials/longhorn.yaml) restricts `longhornManager` and `longhornDriver` to `node-role.kubernetes.io/storage: "true"`.
-  - [`cluster-essentials/longhorn-config/`](../cluster-essentials/longhorn-config/) defines `nodes.longhorn.io/v1beta2` CRDs for [`rock5b-but.yaml`](../cluster-essentials/longhorn-config/rock5b-but.yaml), [`rock5b-first.yaml`](../cluster-essentials/longhorn-config/rock5b-first.yaml), and [`rock5b-coffee.yaml`](../cluster-essentials/longhorn-config/rock5b-coffee.yaml).
+  - [`cluster-essentials/longhorn-config/`](../cluster-essentials/longhorn-config/) defines `nodes.longhorn.io/v1beta2` CRDs for [`rock5b-but.yaml`](../cluster-essentials/longhorn-config/rock5b-but.yaml), [`rock5b-first.yaml`](../cluster-essentials/longhorn-config/rock5b-first.yaml), and [`rock5b-coffee.yaml`](../cluster-essentials/longhorn-config/rock5b-coffee.yaml), plus [`filesystem-trim.yaml`](../cluster-essentials/longhorn-config/filesystem-trim.yaml) (`recurringjobs.longhorn.io/v1beta2` weekly `filesystem-trim` job in group `default`, paired with `defaultSettings.removeSnapshotsDuringFilesystemTrim: true`).
 - **Disk Layout**:
   - `default-disk-1`: Mounted at `/var/lib/longhorn/disk0/` (`allowScheduling: true`, `storageReserved: 0`) on the dedicated `ext4` NVMe partition.
   - Root filesystem disk: `/var/lib/longhorn/` (`allowScheduling: true`, `storageReserved: 53687091200` = 50 GiB reserved for OS/K3s).
