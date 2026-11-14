@@ -13,17 +13,22 @@ function versioncheck() {
     local repoURL=$3
     local version=$4
 
-    # Add the repository if it is not already added
-    helm repo add temp-repo "$repoURL" > /dev/null 2>&1
-    helm repo update > /dev/null 2>&1
+    local latestVersion=""
+    if [[ "$repoURL" == http://* || "$repoURL" == https://* ]]; then
+        # Add the repository if it is not already added
+        helm repo add temp-repo "$repoURL" > /dev/null 2>&1
+        helm repo update > /dev/null 2>&1
 
-    # Get the latest version of the chart
-    local latestInfo
-    latestInfo=$(helm search repo temp-repo/"$chart" | awk 'NR==2 {print $1, $2}')
-    local latestVersion=$(echo "$latestInfo" | awk '{print $2}')
+        # Get the latest version of the chart
+        local latestInfo
+        latestInfo=$(helm search repo temp-repo/"$chart" | awk 'NR==2 {print $1, $2}')
+        latestVersion=$(echo "$latestInfo" | awk '{print $2}')
 
-    # Remove the temporary repository
-    helm repo remove temp-repo > /dev/null 2>&1
+        # Remove the temporary repository
+        helm repo remove temp-repo > /dev/null 2>&1
+    else
+        latestVersion=$(helm show chart "oci://${repoURL}/${chart}" 2>/dev/null | awk '/^version:/ {print $2}')
+    fi
 
     # Remove leading 'v' if it exists
     latestVersion=${latestVersion#v}

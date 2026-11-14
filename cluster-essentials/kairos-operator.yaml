@@ -1,0 +1,48 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kairos-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  destination:
+    namespace: kairos-operator
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: ghcr.io/kairos-io/helm-charts
+    chart: kairos-operator
+    targetRevision: 0.3.0
+    helm:
+      values: |
+        namespace:
+          create: false
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kairos-operator-config
+  namespace: argocd
+spec:
+  destination:
+    namespace: kairos-operator
+    server: https://kubernetes.default.svc
+  project: cluster-essentials
+  source:
+    repoURL: git@github.com:MyChaOS87/sloth.git
+    targetRevision: main
+    path: cluster-essentials/kairos-operator-config
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

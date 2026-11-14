@@ -1,3 +1,4 @@
 .secrets/**
+node-bootstrap/rock5b/build/**
 
 .vscode

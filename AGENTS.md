@@ -1,6 +1,6 @@
 # Sloth Agent Guide
 
-> **Executive Summary**: `sloth` (*SLightly Over-engineered "Trivial" Home automation*) is a GitOps-managed K3s high-availability Kubernetes cluster running on a 3-node Radxa Rock5B (`linux/arm64`) control-plane/storage cluster plus a dedicated Raspberry Pi Zero 2 W (`pi0-lcn`, `linux/arm64`) edge serial node. It reconciles core cluster infrastructure (Argo CD, Sealed Secrets, Declarative Nodes, MetalLB, Traefik, Cert-Manager, ExternalDNS, Longhorn, System Upgrade Controller, Prometheus) and smarthome/SSO workloads (Keycloak, Mosquitto, Telegraf, VictoriaMetrics, Grafana, Automqttion, reverseLCN) via Argo CD's App-of-Apps pattern.
+> **Executive Summary**: `sloth` (*SLightly Over-engineered "Trivial" Home automation*) is a GitOps-managed K3s high-availability Kubernetes cluster running on a 3-node Radxa Rock5B (`linux/arm64`) control-plane/storage cluster plus a dedicated Raspberry Pi Zero 2 W (`pi0-lcn`, `linux/arm64`) edge serial node. It reconciles core cluster infrastructure (Argo CD, Sealed Secrets, Declarative Nodes, MetalLB, Traefik, Cert-Manager, ExternalDNS, Longhorn, System Upgrade Controller, Kairos Operator, Prometheus) and smarthome/SSO workloads (Keycloak, Mosquitto, Telegraf, VictoriaMetrics, Grafana, Automqttion, reverseLCN) via Argo CD's App-of-Apps pattern.
 
 ---
 

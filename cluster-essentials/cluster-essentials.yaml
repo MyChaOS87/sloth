@@ -45,6 +45,11 @@ kind: Namespace
 metadata:
   name: version-checker
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kairos-operator
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -58,6 +63,8 @@ spec:
   - namespace: sealed-secrets
     server: https://kubernetes.default.svc
   - namespace: system-upgrade
+    server: https://kubernetes.default.svc
+  - namespace: kairos-operator
     server: https://kubernetes.default.svc
   - namespace: metallb
     server: https://kubernetes.default.svc  

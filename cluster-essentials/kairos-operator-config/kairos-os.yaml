@@ -1,0 +1,20 @@
+---
+# Note: In kairos-operator, each NodeOpUpgrade creates a child NodeOp with the same metadata.name.
+# When upgrading to a newer image tag on Day 2, update both metadata.name and spec.image so
+# ArgoCD creates a fresh NodeOpUpgrade rollout (and prunes the completed one).
+apiVersion: operator.kairos.io/v1alpha1
+kind: NodeOpUpgrade
+metadata:
+  name: rock5b-v1-0-0-bpo-7-2-12-k3s-v1-37-2-k3s1
+  namespace: kairos-operator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Replace=true
+spec:
+  image: ghcr.io/mychaos87/kairos-rock5b:debian-trixie-bpo-7.2.12-k3s-v1.37.2-k3s1
+  concurrency: 1
+  stopOnFailure: true
+  upgradeActive: true
+  upgradeRecovery: false
+  nodeSelector:
+    matchLabels:
+      kairos.io/managed: "true"

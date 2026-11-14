@@ -26,6 +26,7 @@ flowchart TD
         ExternalDNS["external-dns (1.23.0) + external-dns-config<br/>ns: external-dns"]
         Longhorn["longhorn (1.13.0) + storage-nodes<br/>ns: longhorn"]
         SysUpgrade["system-upgrade (v0.21.0)<br/>ns: system-upgrade"]
+        KairosOp["kairos-operator (0.3.0) + kairos-operator-config<br/>ns: kairos-operator"]
         Prometheus["prometheus (29.41.0)<br/>ns: prometheus"]
         VersionChecker["version-checker (v0.11.0)<br/>ns: version-checker"]
     end
@@ -56,6 +57,7 @@ flowchart TD
     RootEssentials --> ExternalDNS
     RootEssentials --> Longhorn
     RootEssentials --> SysUpgrade
+    RootEssentials --> KairosOp
     RootEssentials --> Prometheus
     RootEssentials --> VersionChecker
 
@@ -138,8 +140,9 @@ sequenceDiagram
 
 - **Two-Phase `v1/Node` Registration**:
   - Applying a `v1/Node` manifest via `ServerSideApply=true` before a physical node has joined creates a bare `NotReady` node in Kubernetes and bypasses kubelet's initial cloud-provider registration taint. Only nodes that have already joined the cluster are declared in [`nodes/`](../nodes/), and each `v1/Node` manifest carries `argocd.argoproj.io/sync-options: Prune=false,Delete=false` so even a cascade delete of the `nodes` Application can never delete a live node.
-- **Rolling K3s Upgrades ([`cluster-essentials/system-upgrade-config/`](../cluster-essentials/system-upgrade-config/))**:
-  - [`k3s.yaml`](../cluster-essentials/system-upgrade-config/k3s.yaml): `server-plan` upgrades control-plane nodes (`cordon: true`), and `agent-plan` (`tolerations: [{ key: dedicated, operator: Exists }]`, `cordon: true`) upgrades K3s on agent nodes after `server-plan` completes.
+- **Rolling K3s & Immutable Kairos Upgrades ([`cluster-essentials/system-upgrade-config/`](../cluster-essentials/system-upgrade-config/) & [`cluster-essentials/kairos-operator-config/`](../cluster-essentials/kairos-operator-config/))**:
+  - [`kairos-os.yaml`](../cluster-essentials/kairos-operator-config/kairos-os.yaml): `NodeOpUpgrade` (`kairos-operator`) performs rolling A/B OCI image upgrades (`concurrency: 1`, `stopOnFailure: true`) on nodes labeled `kairos.io/managed: "true"`.
+  - [`k3s.yaml`](../cluster-essentials/system-upgrade-config/k3s.yaml): `server-plan` and `agent-plan` upgrade non-Kairos nodes (`kairos.io/managed: DoesNotExist`, such as `pi0-lcn`) to the pinned K3s version (`v1.37.2+k3s1`).
 
 ---
 
@@ -151,8 +154,7 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
   - [`nodes/`](../nodes/) assigns `node-role.kubernetes.io/storage: "true"` to the 3 Rock5B nodes via Server-Side Apply, and [`cluster-essentials/longhorn.yaml`](../cluster-essentials/longhorn.yaml) restricts `longhornManager` and `longhornDriver` to `node-role.kubernetes.io/storage: "true"`.
   - [`cluster-essentials/longhorn-config/`](../cluster-essentials/longhorn-config/) defines `nodes.longhorn.io/v1beta2` CRDs for [`rock5b-but.yaml`](../cluster-essentials/longhorn-config/rock5b-but.yaml), [`rock5b-first.yaml`](../cluster-essentials/longhorn-config/rock5b-first.yaml), and [`rock5b-coffee.yaml`](../cluster-essentials/longhorn-config/rock5b-coffee.yaml), plus [`filesystem-trim.yaml`](../cluster-essentials/longhorn-config/filesystem-trim.yaml) (`recurringjobs.longhorn.io/v1beta2` weekly `filesystem-trim` job in group `default`, paired with `defaultSettings.removeSnapshotsDuringFilesystemTrim: true`).
 - **Disk Layout**:
-  - `default-disk-1`: Mounted at `/var/lib/longhorn/disk0/` (`allowScheduling: true`, `storageReserved: 0`) on the dedicated `ext4` NVMe partition.
-  - Root filesystem disk: `/var/lib/longhorn/` (`allowScheduling: true`, `storageReserved: 53687091200` = 50 GiB reserved for OS/K3s).
+  - `disk-0`: Located at `/var/lib/longhorn/disk0/` on each node's `COS_PERSISTENT` (`ext4` `/dev/nvme0n1p5`) NVMe partition (`allowScheduling: true`, `storageReserved: 53687091200` = 50 GiB reserved for OS/K3s, with each node's `diskUUID` preserved via `longhorn-disk.cfg`).
 - **Persistent Volume Consumers**:
   1. **VictoriaMetrics (`victoria-metrics`)**: 16 GiB PVC (`storageClassName: longhorn`, `retentionPeriod: 100y`) storing columnar time-series blocks in `victoria-metrics`.
   2. **Prometheus (`prometheus-server` & `storage-prometheus-alertmanager-0`)**: 100 GiB + 2 GiB Longhorn PVCs storing cluster metrics and alert state in `prometheus`.

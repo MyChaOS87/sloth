@@ -51,10 +51,12 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 
 ---
 
-## 4. Edge Node Provisioning (`node-bootstrap/pi0-lcn/`)
+## 4. Node Provisioning (`node-bootstrap/`)
 
 | File | Target Hardware | Purpose |
 |------|-----------------|---------|
+| [`node-bootstrap/rock5b/cloud-config.yaml.tpl`](../node-bootstrap/rock5b/cloud-config.yaml.tpl) | Radxa Rock 5B (`rock5b-but`, `rock5b-first`, `rock5b-coffee`, Kairos Linux `arm64`) | Declarative Kairos `cloud-config.yaml` template configuring `kasch` SSH access, static IPv4 (`192.168.1.21–23`), persistent Longhorn `diskUUID` preservation on `COS_PERSISTENT`, and K3s HA control-plane join (`https://192.168.1.20:6443`); hardware DTB/SPI sync hooks come baked into the `kairos-rock5b` image (`/system/oem/20_rock5b_hardware.yaml`). |
+| [`node-bootstrap/rock5b/render-node-config.sh`](../node-bootstrap/rock5b/render-node-config.sh) | Radxa Rock 5B (`rock5b-but`, `rock5b-first`, `rock5b-coffee`) | Renders `node-bootstrap/rock5b/build/<node>-cloud-config.yaml` (`0600`) by injecting the node's IP, preserved Longhorn `diskUUID`, and `K3S_TOKEN` from `.secrets/rock5b.env`. |
 | [`node-bootstrap/pi0-lcn/prepare-boot.sh`](../node-bootstrap/pi0-lcn/prepare-boot.sh) | Raspberry Pi Zero 2 W (`pi0-lcn`, DietPi 64-bit `ARMv8` Trixie) | Populates a mounted DietPi SD card boot partition interactively (or from an optional `.secrets/pi0-lcn.env`) with `config.txt`, `cmdline.txt`, `dietpi.txt`, `dietpi-wifi.txt`, `99-lcn-pku.rules`, `playbook.yml`, `k3s-vars.yml`, and `Automation_Custom_Script.sh`. |
 | [`node-bootstrap/pi0-lcn/playbook.yml`](../node-bootstrap/pi0-lcn/playbook.yml) | Raspberry Pi Zero 2 W (`pi0-lcn`, DietPi 64-bit `ARMv8` Trixie) | Idempotent Ansible playbook (`ansible-core` / `ansible.builtin.*`) executed both locally on first boot (`ansible-playbook --connection=local -i localhost, -e @/boot/firmware/k3s-vars.yml /boot/firmware/playbook.yml`) and remotely over SSH on Day 2 (`ansible-playbook -i pi0-lcn, -u kasch --become node-bootstrap/pi0-lcn/playbook.yml`). Configures `sshd`, user `kasch` (`sudo` + `dialout`), `/dev/lcn-pku` udev rules, containerd v3 USB serial cgroup drop-in (`config-v3.toml.d/10-serial.toml`), and K3s agent (`taint: dedicated=lcn-serial:NoExecute`, 512 MB RAM reservations). Node role labels (`lcn-serial`, `monitoring`) are managed declaratively via [`nodes/pi0-lcn.yaml`](../nodes/pi0-lcn.yaml). |
 
