@@ -12,6 +12,9 @@ spec:
       operator: In
       values:
       - "true"
+    # Kairos-managed nodes are upgraded atomically via kairos-operator
+    - key: kairos.io/managed
+      operator: DoesNotExist
   serviceAccountName: system-upgrade
   upgrade:
     image: rancher/k3s-upgrade
@@ -29,6 +32,8 @@ spec:
   nodeSelector:
     matchExpressions:
     - key: node-role.kubernetes.io/control-plane
+      operator: DoesNotExist
+    - key: kairos.io/managed
       operator: DoesNotExist
   tolerations:
   - key: dedicated
