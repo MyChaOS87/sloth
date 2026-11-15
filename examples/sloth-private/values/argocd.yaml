@@ -8,6 +8,11 @@ configs:
       clientSecret: $argocd-client-secret:client-secret
       enablePKCEAuthentication: true
       requestedScopes: ["openid", "profile", "email", "groups"]
+      enableUserInfoGroups: true
+      userInfoPath: /api/oidc/userinfo
+      requestedIDTokenClaims:
+        email:
+          essential: true
 server:
   ingress:
     hostname: argocd.internal.k8s.example.com
