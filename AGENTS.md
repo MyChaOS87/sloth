@@ -16,7 +16,7 @@
 
 ## Paired-Repository Contract & Planning Rules (`sloth` + `sloth-private`)
 
-1. **Both Repositories Form One System**: `sloth` (this public architecture repo) and `sloth-private` (at `SLOTH_PRIVATE_DIR`, default `../sloth-private`) belong together. Whenever working in `sloth`, agents **must** also read `${SLOTH_PRIVATE_DIR}/AGENTS.md` and enforce **both** repositories' rules simultaneously (disjoint Helm keys, `blacklist.txt` maintenance, secret sealing discipline, and ARM64/Longhorn/MetricsQL rules).
+1. **Both Repositories Form One System**: `sloth` (this public architecture repo) and `sloth-private` (at `SLOTH_PRIVATE_DIR`, default `../sloth-private`) belong together. Whenever working in `sloth`, agents **must** also read `${SLOTH_PRIVATE_DIR}/AGENTS.md` and `${SLOTH_PRIVATE_DIR}/CONTEXT.md` and enforce **both** repositories' rules simultaneously (disjoint Helm keys, `blacklist.txt` maintenance, secret sealing discipline, and ARM64/Longhorn/MetricsQL rules).
 2. **Mandatory Per-Repository Plan Split**: Every implementation plan touching the cluster **must** explicitly partition changes into clearly labeled sections:
    * **Public Repository (`sloth`)** — portable manifests, disjoint base Helm values, scripts, hooks, `example.com` / `example-dns` docs and examples
    * **Private Repository (`sloth-private`)** — `values/*.yaml` domain/project overlays, `*.sealed.json` secrets, `blacklist.txt` updates, `private/` workloads
