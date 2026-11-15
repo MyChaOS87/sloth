@@ -18,24 +18,27 @@ This document defines the structural standards for Argo CD manifests, Kubernetes
       helm:
         releaseName: sealed-secrets
   ```
-- **Multi-Source (`spec.sources`)**: Use when combining an upstream Helm chart (`spec.sources[0]`) with in-repo `SealedSecret`, `ConfigMap`, or CRD manifests (`spec.sources[1]`):
+- **Multi-Source (`spec.sources`)**: Use when combining an upstream Helm chart (`spec.sources[0]`) with `$private/values/<app>.yaml` overlays (`ref: private`), private `SealedSecret` paths, or public `ConfigMap` manifests:
   ```yaml
   spec:
     project: cluster-essentials
     sources:
-      - repoURL: https://charts.jetstack.io
-        chart: cert-manager
-        targetRevision: v1.21.3
+      - repoURL: https://prometheus-community.github.io/helm-charts
+        chart: prometheus
+        targetRevision: 29.41.0
         helm:
-          releaseName: cert-manager
+          valueFiles:
+            - $private/values/prometheus.yaml
           values: |
-            crds:
-              enabled: true
-      - repoURL: git@github.com:MyChaOS87/sloth.git
-        targetRevision: HEAD
-        path: cluster-essentials/cert-manager-issuer
+            server:
+              ingress:
+                enabled: true
+      - repoURL: git@github.com:MyChaOS87/sloth-private.git
+        targetRevision: main
+        ref: private
   ```
-  - **Bootstrap Rule**: In [`argocd-base/argocd.yaml`](../argocd-base/argocd.yaml), the Helm chart **must** remain at `spec.sources[0]` because [`makefile`](../makefile) extracts `.spec.sources[0].targetRevision` and `.spec.sources[0].helm.valuesObject` via `yq`.
+  - **Bootstrap Rule**: In [`argocd-base/argocd.yaml`](../argocd-base/argocd.yaml), the Helm chart **must** remain at `spec.sources[0]` because [`makefile`](../makefile) extracts `.spec.sources[0].targetRevision` and `.spec.sources[0].helm.values` via `yq`.
+  - **Disjoint-Key Rule**: Inline `helm.values` in `sloth` is evaluated *after* `$private/values/<app>.yaml`. Keep keys (and especially YAML lists such as `extraArgs`, `hosts`, and `tls`) strictly disjoint between the two files so neither overrides the other; see [`PRIVATE_OVERLAY.md`](./PRIVATE_OVERLAY.md).
 
 ### Sync Policy Standards
 All production `Application` manifests must enable automated reconciliation with both `prune` and `selfHeal`:
@@ -59,22 +62,22 @@ All production `Application` manifests must enable automated reconciliation with
 ## 2. Networking, DNS & TLS Annotations
 
 ### Ingress Resources
-All internal web UIs exposed via Traefik must use the `letsencrypt` `ClusterIssuer`:
+All internal web UIs exposed via Traefik must use the `letsencrypt` `ClusterIssuer` (keeping `annotations`, `enabled`, and `tls: true` in `sloth`, and domain-specific `hosts`/`tls` in `$private/values/<app>.yaml`):
 ```yaml
 annotations:
   cert-manager.io/cluster-issuer: letsencrypt
 ```
-Provide a matching `tls` block with `secretName: <service>-tls` and `hosts: [<service>.rock.k8s.example.com]`.
+Provide a matching `tls` block in `$private/values/<app>.yaml` with `secretName: <service>-tls` and `hosts: [<service>.rock.k8s.example.com]`.
 
 ### Static LoadBalancer Services (MetalLB + ExternalDNS)
-Services exposed directly via MetalLB `LoadBalancer` (such as [`mosquitto`](../deployments/smarthome/mosquitto/values.yaml)) must declare:
-1. `metallb.universe.tf/loadBalancerIPs: "192.168.1.30"` (from `metallb-reserved-pool`: `192.168.1.30–49`).
-2. Both ExternalDNS hostname annotations (`external-dns.kubernetes.io/hostname` and `external-dns.alpha.kubernetes.io/hostname`) for compatibility with ExternalDNS `1.23.0+` configured with `--enable-legacy-annotation-prefix`:
+Services exposed directly via MetalLB `LoadBalancer` (such as [`mosquitto`](../deployments/smarthome/mosquitto.yaml) + `examples/sloth-private/values/mosquitto.yaml`) must split:
+1. `metallb.universe.tf/loadBalancerIPs: "192.168.1.30"` (from `metallb-reserved-pool`: `192.168.1.30–49`) in public `sloth`.
+2. Both ExternalDNS hostname annotations (`external-dns.kubernetes.io/hostname` and `external-dns.alpha.kubernetes.io/hostname`) for compatibility with ExternalDNS `1.23.0+` configured with `--enable-legacy-annotation-prefix` in `$private/values/mosquitto.yaml`:
    ```yaml
-   annotations:
-     external-dns.kubernetes.io/hostname: mqtt.internal.k8s.example.com,mqtt.rock.k8s.example.com
-     external-dns.alpha.kubernetes.io/hostname: mqtt.internal.k8s.example.com,mqtt.rock.k8s.example.com
-     metallb.universe.tf/loadBalancerIPs: 192.168.1.30
+   service:
+     annotations:
+       external-dns.kubernetes.io/hostname: mosquitto.rock.k8s.example.com,mosquitto.internal.k8s.example.com.
+       external-dns.alpha.kubernetes.io/hostname: mosquitto.rock.k8s.example.com,mosquitto.internal.k8s.example.com.
    ```
 
 ---

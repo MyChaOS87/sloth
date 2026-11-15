@@ -31,7 +31,7 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: cluster-essentials/cert-manager-config
   syncPolicy:

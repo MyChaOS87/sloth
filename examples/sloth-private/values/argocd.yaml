@@ -1,0 +1,19 @@
+configs:
+  cm:
+    url: https://argocd.internal.k8s.example.com
+    oidc.config: |
+      name: Keycloak
+      issuer: https://sso.internal.k8s.example.com/realms/example
+      clientID: argocd
+      clientSecret: $argocd-client-secret:client-secret
+      requestedScopes: ["openid", "profile", "email"]
+server:
+  ingress:
+    hostname: argocd.internal.k8s.example.com
+    extraHosts:
+      - name: argocd.rock.k8s.example.com
+    extraTls:
+      - hosts:
+          - argocd.internal.k8s.example.com
+          - argocd.rock.k8s.example.com
+        secretName: argocd-rock-k8s-example-com-tls

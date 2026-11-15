@@ -37,7 +37,7 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: cluster-essentials/kairos-operator-config
   syncPolicy:

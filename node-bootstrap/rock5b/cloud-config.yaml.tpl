@@ -56,8 +56,8 @@ stages:
               - "kairos.io/managed=true"
             tls-san:
               - "192.168.1.20"
-              - "api.internal.k8s.example.com"
-              - "api.rock.k8s.example.com"
+              - "api.internal.k8s.__CLUSTER_DOMAIN__"
+              - "api.rock.k8s.__CLUSTER_DOMAIN__"
               - "192.168.1.21"
               - "192.168.1.22"
               - "192.168.1.23"

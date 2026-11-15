@@ -6,15 +6,16 @@ This document illustrates the GitOps application hierarchy, network/ingress flow
 
 ## 1. Argo CD App-of-Apps Hierarchy
 
-`sloth` uses a 3-tier Argo CD **App-of-Apps** structure rooted in [`argocd-base/`](../argocd-base/). Every `Application` reconciles against `HEAD` of `git@github.com:MyChaOS87/sloth.git` with automated `syncPolicy` (`prune: true`, `selfHeal: true`).
+`sloth` uses a 3-tier Argo CD **App-of-Apps** structure rooted in [`argocd-base/`](../argocd-base/), paired with a companion private repository (`sloth-private`, documented in [`PRIVATE_OVERLAY.md`](./PRIVATE_OVERLAY.md)) for domain overlays, `SealedSecret` manifests, and private-only applications. Every `Application` reconciles against `HEAD` of `https://github.com/MyChaOS87/sloth.git` (and/or `git@github.com:MyChaOS87/sloth-private.git`) with automated `syncPolicy` (`prune: true`, `selfHeal: true`).
 
 ```mermaid
 flowchart TD
     subgraph Tier0["Tier 0: Bootstrap (argocd-base/)"]
-        ArgoCD["argocd (argo-cd 10.14.0)<br/>ns: argocd"]
+        ArgoCD["argocd (argo-cd 10.14.0 + $private)<br/>ns: argocd"]
         Nodes["nodes (ServerSideApply)<br/>path: nodes/ | proj: nodes"]
         RootEssentials["argocd-cluster-essentials<br/>path: cluster-essentials/"]
         RootDeployments["argocd-deployments<br/>path: deployments/"]
+        RootPrivate["private (from sloth-private)<br/>path: private/ | proj: private"]
     end
 
     subgraph Tier1["Tier 1: Cluster Essentials (cluster-essentials/)"]
@@ -77,16 +78,17 @@ flowchart TD
 | `AppProject` | Manifest | Permitted Source Repos | Target Namespaces |
 |--------------|----------|------------------------|-------------------|
 | `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `*` | `argocd` |
-| `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `git@github.com:MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
+| `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `https://github.com/MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
 | `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
 | `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `victoria-metrics`, `grafana`, `automqttion`, `reverselcn`) |
+| `private` | `sloth-private/private/private.yaml` | `*` | `*` (private workloads & experiments isolated from `sloth`) |
 
 ---
 
 ## 2. Networking, Ingress, DNS & TLS Architecture
 
-Because K3s runs with `--disable traefik --disable servicelb`, Layer-2 IP allocation, ingress routing, public DNS records, and Let's Encrypt TLS certificates are orchestrated through four collaborating components:
+Because K3s runs with `--disable traefik --disable servicelb`, Layer-2 IP allocation, ingress routing, public DNS records, and Let's Encrypt TLS certificates are orchestrated through four collaborating components (example endpoints below shown using `example.com` and `example-dns`):
 
 ```mermaid
 sequenceDiagram
@@ -111,19 +113,19 @@ sequenceDiagram
     CertMgr-->>Traefik: Mount TLS Secret for HTTPS termination (websecure :8443)
 ```
 
-### Exposed Endpoints Summary
+### Exposed Endpoints Summary (Shown with `example.com`)
 
 | Service | Hostname / IP | Exposure Mechanism | TLS / Auth |
 |---------|---------------|--------------------|------------|
-| **K3s Control-Plane API** | `192.168.1.20:6443` (`api.internal.k8s.example.com`, `api.rock.k8s.example.com`) | `kube-vip` L2 ARP Leader Lease (`plndr-cp-lock` on `enP4p65s0`) + `ExternalName` DNS Service | K3s Cluster CA TLS (`:6443`) |
-| **Argo CD UI/API** | `argocd.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
-| **Traefik Dashboard** | `traefik.rock.k8s.example.com` | Traefik `IngressRoute` | HTTP / Internal LAN |
+| **K3s Control-Plane API** | `192.168.1.20:6443` (`api.internal.k8s.example.com`, `api.rock.k8s.example.com`) | `kube-vip` L2 ARP Leader Lease (`plndr-cp-lock` on `enP4p65s0`) + `ExternalName` DNS Service (`sloth-private`) | K3s Cluster CA TLS (`:6443`) |
+| **Argo CD UI/API** | `argocd.internal.k8s.example.com`, `argocd.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
+| **Traefik Dashboard** | Cluster-internal port-forward | Traefik `IngressRoute` | HTTP / Internal LAN |
 | **Longhorn UI** | `longhorn.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Prometheus UI** | `prometheus.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Keycloak SSO** | `keycloak.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Grafana** | `grafana.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
+| **Prometheus UI** | `prometheus.internal.k8s.example.com`, `prometheus.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
+| **Keycloak SSO** | `sso.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
+| **Grafana** | `grafana.rock.k8s.example.com`, `grafana.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
 | **VictoriaMetrics UI/API** | `victoria.rock.k8s.example.com`, `victoria.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Mosquitto MQTT** | `192.168.1.30:1883` (`mqtt.rock.k8s.example.com`, `mqtt.internal.k8s.example.com`) | MetalLB `LoadBalancer` (`metallb-reserved-pool`) | TCP `:1883` |
+| **Mosquitto MQTT** | `192.168.1.30:1883` (`mosquitto.rock.k8s.example.com`, `mosquitto.internal.k8s.example.com`) | MetalLB `LoadBalancer` (`metallb-reserved-pool`) | TCP `:1883` |
 
 ---
 

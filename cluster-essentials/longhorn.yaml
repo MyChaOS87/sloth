@@ -5,11 +5,13 @@ metadata:
   name: longhorn
   namespace: argocd
 spec:
-  source:
-    repoURL: https://charts.longhorn.io
+  sources:
+  - repoURL: https://charts.longhorn.io
     targetRevision: 1.13.0
     chart: longhorn
     helm:
+      valueFiles:
+        - $private/values/longhorn.yaml
       values: |
         defaultSettings:
           createDefaultDiskLabeledNodes: true
@@ -24,9 +26,10 @@ spec:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
           enabled: true
-          host: longhorn.rock.k8s.example.com
           tls: true
-          tlsSecret: longhorn-rock-k8s-example-com-tls
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn
@@ -47,7 +50,7 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: cluster-essentials/longhorn-config
   syncPolicy:

@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := argocd.install
 
+SLOTH_PRIVATE_DIR ?= ../sloth-private
 SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" cluster-essentials/sealed-secrets.yaml)
 ARGOCDVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.sources[0].targetRevision" argocd-base/argocd.yaml)
 
@@ -39,9 +40,9 @@ sealed-secrets.uninstall: checkPrerequisites.helm
 argocd.install: checkPrerequisites.helm checkPrerequisites.yq
 	helm repo add argo https://argoproj.github.io/argo-helm
 	yq -r ". | select(.kind == \"Application\") | .spec.sources[0].helm.values" argocd-base/argocd.yaml > .argocd.values.yaml
-	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f .argocd.values.yaml argo/argo-cd
-	kubectl create -f argocd-base/argocd-base.yaml               
-	kubectl create -f repository.sealed.json
+	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f $(SLOTH_PRIVATE_DIR)/values/argocd.yaml -f .argocd.values.yaml argo/argo-cd
+	kubectl apply -f argocd-base/argocd-base.yaml
+	kubectl apply -f $(SLOTH_PRIVATE_DIR)/argocd-base/repository-private.sealed.json
 	rm .argocd.values.yaml
 
 .PHONY: argocd.password

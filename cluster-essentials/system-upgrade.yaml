@@ -12,7 +12,7 @@ spec:
     - repoURL: "https://github.com/rancher/system-upgrade-controller.git"
       targetRevision: v0.21.0
       path: .
-    - repoURL: git@github.com:MyChaOS87/sloth.git
+    - repoURL: https://github.com/MyChaOS87/sloth.git
       targetRevision: main
       path: cluster-essentials/system-upgrade-config
   syncPolicy:

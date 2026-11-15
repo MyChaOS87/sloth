@@ -1,0 +1,10 @@
+ingress:
+  rules:
+    - host: "sso.internal.k8s.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: tls-secret
+      hosts:
+        - "sso.internal.k8s.example.com"

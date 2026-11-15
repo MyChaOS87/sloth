@@ -13,6 +13,8 @@ spec:
     targetRevision: 7.4.0
     chart: keycloakx
     helm:
+      valueFiles:
+        - $private/values/keycloak.yaml
       values: |
         command:
             - "/opt/keycloak/bin/kc.sh"
@@ -38,18 +40,12 @@ spec:
           enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
-          rules:
-            - host: "sso.internal.k8s.example.com"
-              paths:
-              - path: /
-                pathType: Prefix
-          tls:
-            - secretName: tls-secret
-              hosts:
-                - "sso.internal.k8s.example.com"
         http:
           relativePath: "/"
-  - repoURL: git@github.com:MyChaOS87/sloth.git
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: deployments/oidc/keycloak-secrets
   syncPolicy:

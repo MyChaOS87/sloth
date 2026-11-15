@@ -9,6 +9,8 @@ spec:
     targetRevision: 10.14.0
     chart: argo-cd
     helm:
+      valueFiles:
+        - $private/values/argocd.yaml
       values: |
         global:
           networkPolicy:
@@ -18,14 +20,6 @@ spec:
         configs:
           params: 
             server.insecure: true
-          cm:
-            url: https://argocd.internal.k8s.example.com
-            oidc.config: |
-              name: Keycloak
-              issuer: https://sso.internal.k8s.example.com/realms/example
-              clientID: argocd
-              clientSecret: $argocd-client-secret:client-secret
-              requestedScopes: ["openid", "profile", "email"]
           rbac:
             policy.csv: |
               g, argocd:admin, role:admin
@@ -34,16 +28,11 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
             enabled: true
-            hostname: argocd.internal.k8s.example.com
-            extraHosts:
-              - name: argocd.rock.k8s.example.com
             tls: true
-            extraTls: 
-              - hosts: 
-                - argocd.internal.k8s.example.com
-                - argocd.rock.k8s.example.com
-                secretName: argocd-rock-k8s-example-com-tls
-  - repoURL: git@github.com:MyChaOS87/sloth.git
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: argocd-base/argocd-secrets
   destination:

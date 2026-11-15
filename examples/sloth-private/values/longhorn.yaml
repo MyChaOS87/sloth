@@ -1,0 +1,3 @@
+ingress:
+  host: longhorn.rock.k8s.example.com
+  tlsSecret: longhorn-rock-k8s-example-com-tls

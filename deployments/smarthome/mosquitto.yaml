@@ -8,17 +8,17 @@ spec:
     namespace: mosquitto
     server: https://kubernetes.default.svc
   project: smarthome
-  source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+  sources:
+  - repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/mosquitto
     helm:
+      valueFiles:
+        - $private/values/mosquitto.yaml
       values: |
         service:
           annotations:
             metallb.universe.tf/loadBalancerIPs: 192.168.1.30
-            external-dns.alpha.kubernetes.io/hostname: mosquitto.rock.k8s.example.com,mosquitto.internal.k8s.example.com.
-            external-dns.kubernetes.io/hostname: mosquitto.rock.k8s.example.com,mosquitto.internal.k8s.example.com.
           type: LoadBalancer
         affinity:
           podAntiAffinity:
@@ -31,6 +31,9 @@ spec:
                   labelSelector:
                     matchLabels:
                       app.kubernetes.io/name: victoria-metrics-single
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
   syncPolicy:
     automated:
       prune: true

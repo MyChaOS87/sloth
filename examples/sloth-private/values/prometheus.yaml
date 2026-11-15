@@ -1,0 +1,10 @@
+server:
+  ingress:
+    hosts:
+      - prometheus.internal.k8s.example.com
+      - prometheus.rock.k8s.example.com
+    tls:
+      - secretName: prometheus-rock-k8s-example-com-tls
+        hosts:
+          - prometheus.internal.k8s.example.com
+          - prometheus.rock.k8s.example.com

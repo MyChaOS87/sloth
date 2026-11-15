@@ -28,12 +28,12 @@ The core control plane and distributed storage layer of `sloth` runs on a 3-node
 
 ### 1.2 Rendering Per-Node Cloud-Config (`node-bootstrap/rock5b/`)
 
-1. Place `K3S_TOKEN=<cluster-join-token>` in gitignored `.secrets/rock5b.env` and render the per-node cloud-config (see [`render-node-config.sh`](../../node-bootstrap/rock5b/render-node-config.sh) and [`cloud-config.yaml.tpl`](../../node-bootstrap/rock5b/cloud-config.yaml.tpl)):
+1. Place `K3S_TOKEN=<cluster-join-token>` and `CLUSTER_DOMAIN=<your-domain>` in gitignored `.secrets/rock5b.env` (or `.secrets/sloth.env`) and render the per-node cloud-config (see [`render-node-config.sh`](../../node-bootstrap/rock5b/render-node-config.sh) and [`cloud-config.yaml.tpl`](../../node-bootstrap/rock5b/cloud-config.yaml.tpl)):
    ```bash
    ./node-bootstrap/rock5b/render-node-config.sh <rock5b-but|rock5b-first|rock5b-coffee>
    ```
    *(Outputs `node-bootstrap/rock5b/build/<node>-cloud-config.yaml` with `0600` permissions.)*
-2. The rendered config sets static LAN IPv4 (`192.168.1.21–23/24` on `Driver=r8169` via `systemd-networkd`), `kasch` SSH authorized keys + passwordless `sudo`, `/etc/rancher/k3s/config.yaml` (`node-ip`, `node-label: kairos.io/managed=true`, `tls-san` for `192.168.1.20` / `api.internal.k8s.example.com` / `api.rock.k8s.example.com`, `--disable traefik --disable servicelb`), Longhorn `/var/lib/longhorn/disk0/longhorn-disk.cfg` preserving each node's `diskUUID`, and HA K3s control-plane join (`https://192.168.1.20:6443`, or `--cluster-init` if bootstrapping the very first control-plane node of a brand-new cluster before `kube-vip` is running).
+2. The rendered config sets static LAN IPv4 (`192.168.1.21–23/24` on `Driver=r8169` via `systemd-networkd`), `kasch` SSH authorized keys + passwordless `sudo`, `/etc/rancher/k3s/config.yaml` (`node-ip`, `node-label: kairos.io/managed=true`, `tls-san` for `192.168.1.20` / `api.internal.k8s.<CLUSTER_DOMAIN>` / `api.rock.k8s.<CLUSTER_DOMAIN>`, `--disable traefik --disable servicelb`), Longhorn `/var/lib/longhorn/disk0/longhorn-disk.cfg` preserving each node's `diskUUID`, and HA K3s control-plane join (`https://192.168.1.20:6443`, or `--cluster-init` if bootstrapping the very first control-plane node of a brand-new cluster before `kube-vip` is running).
 
 ### 1.3 Bare-Metal Provisioning & Rolling Node Replacement
 

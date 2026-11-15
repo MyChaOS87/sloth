@@ -6,7 +6,7 @@ shopt -u patsub_replacement 2>/dev/null || true
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-MAIN_REPO_ROOT="$(cd "$(git -C "${REPO_ROOT}" rev-parse --git-common-dir)/.." && pwd)"
+MAIN_REPO_ROOT="$(cd "${REPO_ROOT}" && cd "$(git rev-parse --git-common-dir)/.." && pwd)"
 
 NODE_HOSTNAME="${1:-}"
 ENV_FILE="${2:-}"
@@ -42,6 +42,8 @@ else
   for candidate in \
     "${REPO_ROOT}/.secrets/rock5b.env" \
     "${MAIN_REPO_ROOT}/.secrets/rock5b.env" \
+    "${REPO_ROOT}/.secrets/sloth.env" \
+    "${MAIN_REPO_ROOT}/.secrets/sloth.env" \
     "${REPO_ROOT}/.secrets/pi0-lcn.env" \
     "${MAIN_REPO_ROOT}/.secrets/pi0-lcn.env"; do
     if [[ -f "${candidate}" ]]; then
@@ -51,6 +53,24 @@ else
     fi
   done
 fi
+
+if [[ -z "${CLUSTER_DOMAIN:-}" ]]; then
+  for fallback in \
+    "${REPO_ROOT}/.secrets/sloth.env" \
+    "${MAIN_REPO_ROOT}/.secrets/sloth.env"; do
+    if [[ -f "${fallback}" ]]; then
+      # shellcheck disable=SC1090
+      source "${fallback}"
+      break
+    fi
+  done
+fi
+
+if [[ -z "${CLUSTER_DOMAIN:-}" ]]; then
+  read -rp "Cluster Base Domain (e.g. example.com): " CLUSTER_DOMAIN
+fi
+
+: "${CLUSTER_DOMAIN:?CLUSTER_DOMAIN must be provided}"
 
 if [[ -z "${K3S_TOKEN:-}" ]]; then
   read -rsp "K3s Cluster Server Token (/var/lib/rancher/k3s/server/node-token): " K3S_TOKEN
@@ -71,6 +91,7 @@ OUT_FILE="${OUT_DIR}/${NODE_HOSTNAME}-cloud-config.yaml"
 TEMPLATE="$(<"${SCRIPT_DIR}/cloud-config.yaml.tpl")"
 RENDERED="${TEMPLATE//__NODE_HOSTNAME__/"${NODE_HOSTNAME}"}"
 RENDERED="${RENDERED//__NODE_IP__/"${NODE_IP}"}"
+RENDERED="${RENDERED//__CLUSTER_DOMAIN__/"${CLUSTER_DOMAIN}"}"
 RENDERED="${RENDERED//__LONGHORN_DISK_UUID__/"${LONGHORN_DISK_UUID}"}"
 RENDERED="${RENDERED//__K3S_TOKEN__/"${K3S_TOKEN}"}"
 

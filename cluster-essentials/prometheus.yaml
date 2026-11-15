@@ -8,25 +8,19 @@ spec:
     namespace: prometheus
     server: https://kubernetes.default.svc
   project: cluster-essentials
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
+  sources:
+  - repoURL: https://prometheus-community.github.io/helm-charts
     targetRevision: 29.41.0
     chart: prometheus
     helm:
+      valueFiles:
+        - $private/values/prometheus.yaml
       values: |
         server:
           ingress:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
             enabled: true
-            hosts: 
-              - prometheus.internal.k8s.example.com
-              - prometheus.rock.k8s.example.com
-            tls: 
-              - secretName: prometheus-rock-k8s-example-com-tls
-                hosts: 
-                  - prometheus.internal.k8s.example.com
-                  - prometheus.rock.k8s.example.com
           persistentVolume:
             enabled: true
             size: 100Gi
@@ -39,6 +33,9 @@ spec:
               operator: Exists
             - key: dedicated
               operator: Exists
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
   syncPolicy:
     automated:
       prune: true

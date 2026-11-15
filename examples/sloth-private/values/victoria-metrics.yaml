@@ -1,0 +1,16 @@
+server:
+  ingress:
+    hosts:
+      - name: victoria.rock.k8s.example.com
+        path:
+          - /
+        port: http
+      - name: victoria.internal.k8s.example.com
+        path:
+          - /
+        port: http
+    tls:
+      - secretName: victoria-rock-k8s-example-com-tls
+        hosts:
+          - victoria.rock.k8s.example.com
+          - victoria.internal.k8s.example.com

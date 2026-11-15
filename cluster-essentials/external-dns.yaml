@@ -8,11 +8,13 @@ spec:
     namespace: external-dns
     server: https://kubernetes.default.svc
   project: cluster-essentials
-  source:
-    repoURL: https://kubernetes-sigs.github.io/external-dns/
+  sources:
+  - repoURL: https://kubernetes-sigs.github.io/external-dns/
     chart: external-dns
     targetRevision: 1.23.0
     helm:
+      valueFiles:
+        - $private/values/external-dns.yaml
       values: |       
         sources:
           - service
@@ -23,11 +25,6 @@ spec:
         provider:
           name: google
 
-        extraArgs:
-          - --google-project=example-dns
-          - --enable-legacy-annotation-prefix
-          # - --domain-filter=rock.k8s.example.com
-        
         extraVolumeMounts:
           - name: gcloud-sa
             mountPath: /etc/kubernetes/
@@ -46,6 +43,9 @@ spec:
 
         podAnnotations:
           use-metadata.version-checker.io/external-dns: "true"
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
   syncPolicy:
     automated:
       prune: true
@@ -62,7 +62,7 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: cluster-essentials/external-dns-config
   syncPolicy:

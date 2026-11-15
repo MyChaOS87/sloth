@@ -10,10 +10,10 @@ Because `sloth` is an infrastructure/GitOps repository rather than a Go codebase
 Before committing any change to `argocd-base/`, `nodes/`, `cluster-essentials/`, or `deployments/`, validate that the chart or overlay renders cleanly and passes JSON Schema validation:
 
 1. **Helm Chart Rendering & Schema Check**:
-   Extract inline `values` (or use `valuesObject` / `values.yaml`) and run `helm template`:
+   Combine private overlay values (e.g., `examples/sloth-private/values/<app>.yaml` or your private overlay checkout) with extracted inline `values` and run `helm template`:
    ```bash
-   yq '.spec.source.helm.values' cluster-essentials/<app>.yaml > /tmp/<app>-values.yaml
-   helm template <release-name> <repo>/<chart> --version <version> -n <namespace> -f /tmp/<app>-values.yaml > /dev/null
+   yq '.spec.sources[0].helm.values' cluster-essentials/<app>.yaml > /tmp/<app>-values.yaml
+   helm template <release-name> <repo>/<chart> --version <version> -n <namespace> -f examples/sloth-private/values/<app>.yaml -f /tmp/<app>-values.yaml > /dev/null
    ```
    - *Why this matters*: Upstream charts (such as `external-dns` `1.23.0+`) ship strict `values.schema.json` validators that reject missing required fields (`policy: sync`) at template time.
 2. **Local Helm Chart Linting**:

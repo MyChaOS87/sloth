@@ -1,0 +1,18 @@
+ingress:
+  hosts:
+    - grafana.k8s.lan
+    - grafana.rock.k8s.example.com
+    - grafana.internal.k8s.example.com
+  tls:
+    - hosts:
+        - grafana.rock.k8s.example.com
+        - grafana.internal.k8s.example.com
+      secretName: grafana-rock-k8s-example-com-tls
+grafana.ini:
+  server:
+    domain: grafana.internal.k8s.example.com
+    root_url: https://grafana.internal.k8s.example.com
+  auth.generic_oauth:
+    auth_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/auth
+    token_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/token
+    api_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/userinfo

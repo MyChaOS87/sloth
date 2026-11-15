@@ -8,7 +8,7 @@ metadata:
 spec:
   description: Declarative Kubernetes Node labels and taints
   sourceRepos:
-    - git@github.com:MyChaOS87/sloth.git
+    - https://github.com/MyChaOS87/sloth.git
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
@@ -30,7 +30,7 @@ metadata:
 spec:
   project: nodes
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: nodes
   destination:

@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome
   destination:
@@ -24,7 +24,7 @@ metadata:
   namespace: argocd
 spec:
   source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+    repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/oidc
   destination:

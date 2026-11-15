@@ -12,10 +12,11 @@ Everything in the cluster is kept as hardware-independent as possible. To deploy
 * [`nodes/`](./nodes/) — Declarative Server-Side Applied `v1/Node` role labels (`storage`, `speaker`, `monitoring`, `lcn-serial`) and taints.
 * [`cluster-essentials/`](./cluster-essentials/) — Core platform services (`sealed-secrets`, `kube-vip`, `metallb`, `traefik`, `cert-manager`, `external-dns`, `longhorn`, `system-upgrade`, `kairos-operator`, `prometheus`, `version-checker`).
 * [`deployments/`](./deployments/) — Workload stacks (`oidc/keycloak` and `smarthome/{mosquitto,telegraf,victoria-metrics,grafana,automqttion,reverselcn}`).
+* [`examples/sloth-private/`](./examples/sloth-private/) — Reference private overlay skeleton (`example.com`) for replicating `sloth-private`; see [`docs/PRIVATE_OVERLAY.md`](./docs/PRIVATE_OVERLAY.md).
 * [`node-bootstrap/rock5b/`](./node-bootstrap/rock5b/) — Declarative Kairos `cloud-config.yaml` template and per-node config renderer for the 3 Radxa Rock 5B nodes.
 * [`node-bootstrap/pi0-lcn/`](./node-bootstrap/pi0-lcn/) — Zero-touch DietPi SD card generator and idempotent Ansible playbook for `pi0-lcn`.
-* [`docs/`](./docs/) — Architecture, conventions, toolchain, and per-node [hardware setup guides](./docs/hardware/).
-* `.secrets/` — Local temporary directory for unsealed secrets (gitignored; never committed).
+* [`docs/`](./docs/) — Architecture, private overlay contract, conventions, toolchain, and per-node [hardware setup guides](./docs/hardware/).
+* `.secrets/` — Local temporary directory for unsealed secrets and `.secrets/sloth.env` (gitignored; never committed).
 
 ### Technology Stack
 * **Kubernetes & HA API VIP**: [K3s](https://k3s.io) (`v1.37.2+k3s1`) with embedded HA `etcd` and [kube-vip](https://kube-vip.io/) (`192.168.1.20:6443` / `api.internal.k8s.example.com` / `api.rock.k8s.example.com`)
@@ -64,21 +65,21 @@ kubectl config set-cluster sloth --server=https://api.internal.k8s.example.com:6
 
 ## Bootstrapping Secrets and Argo CD
 
+Domain-specific Helm overlays, ExternalDNS/Cert-Manager configs, and encrypted `SealedSecret` manifests (`*.sealed.json`) live in a separate private companion repository (`sloth-private` at `SLOTH_PRIVATE_DIR=../sloth-private`). See [`docs/PRIVATE_OVERLAY.md`](./docs/PRIVATE_OVERLAY.md) and [`examples/sloth-private/`](./examples/sloth-private/) for the full directory contract.
+
 ### Local Prerequisites
 * `kubectl` (configured against your K3s cluster)
 * `helm`
-* `kubeseal` — for sealing secrets
 * `yq`
+* `kubeseal` — for sealing secrets
 
-### Prepare SealedSecrets & Deploy Key
-Because `sloth` uses [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets), the `*.sealed.json` manifests committed to this repository can only be decrypted by this cluster's SealedSecrets controller keypair.
-
-Install `kubeseal`, deploy the `sealed-secrets` controller once via the `makefile`, and generate/seal your GitHub SSH deploy key:
+### Prepare Private Overlay, SealedSecrets & Deploy Key
+Copy [`examples/sloth-private/`](./examples/sloth-private/) to `../sloth-private`, customize your domain/project settings in `.secrets/sloth.env` and the overlay YAML files, install `sealed-secrets`, and run the sealing scripts in `sloth` (outputs write directly to `${SLOTH_PRIVATE_DIR}`):
 ```bash
 make sealed-secrets.install
 make sealed-secrets.seal.sshDeployKey
 ```
-Add the printed public SSH key to your GitHub repository's Deploy Keys settings so Argo CD can pull from the repository.
+Add `../sloth-private/deploy_key.pub` as a read-only Deploy Key on your private overlay GitHub repository so Argo CD can pull from it, then run the remaining `create-and-seal-*.sh` scripts and commit/push your private overlay repository.
 
 ### Install Argo CD and Bootstrap the Cluster
 ```bash

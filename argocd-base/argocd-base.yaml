@@ -4,8 +4,11 @@ metadata:
   name: argocd-base
   namespace: argocd
 spec:
-  source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+  sources:
+  - repoURL: https://github.com/MyChaOS87/sloth.git
+    targetRevision: main
+    path: argocd-base
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: argocd-base
   destination:

@@ -53,8 +53,11 @@ spec:
     namespace: metallb
     server: https://kubernetes.default.svc
   project: cluster-essentials
-  source:
-    repoURL: git@github.com:MyChaOS87/sloth.git
+  sources:
+  - repoURL: https://github.com/MyChaOS87/sloth.git
+    targetRevision: main
+    path: cluster-essentials/metallb-config
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: cluster-essentials/metallb-config
   syncPolicy:

@@ -13,20 +13,13 @@ spec:
     targetRevision: 10.5.15
     chart: grafana
     helm:
+      valueFiles:
+        - $private/values/grafana.yaml
       values: |
         ingress:
           enabled: true
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
-          hosts:
-          - grafana.k8s.lan
-          - grafana.rock.k8s.example.com
-          - grafana.internal.k8s.example.com
-          tls:
-          - hosts:
-            - grafana.rock.k8s.example.com
-            - grafana.internal.k8s.example.com
-            secretName: grafana-rock-k8s-example-com-tls
         admin:
           existingSecret: grafana-secret
         datasources:
@@ -40,7 +33,7 @@ spec:
               isDefault: true
             - name: Prometheus
               type: prometheus
-              url: 'https://prometheus.internal.k8s.example.com'
+              url: 'http://prometheus-server.prometheus.svc.cluster.local'
         envValueFrom:
           GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
             secretKeyRef:
@@ -80,9 +73,6 @@ spec:
             label: grafana_dashboard
             labelValue: "1"
         grafana.ini:
-          server:
-            domain: grafana.internal.k8s.example.com
-            root_url: https://grafana.internal.k8s.example.com
           auth.generic_oauth:
             enabled: true
             name: Keycloak
@@ -92,15 +82,15 @@ spec:
             email_attribute_path: email
             login_attribute_path: username
             name_attribute_path: full_name
-            auth_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/auth
-            token_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/token
-            api_url: https://sso.internal.k8s.example.com/realms/example/protocol/openid-connect/userinfo
             role_attribute_path: contains(resource_access.grafana.roles[*], 'admin') && 'Admin' || contains(resource_access.grafana.roles[*], 'editor') && 'Editor' || 'Viewer'
             role_attribute_strict: true
-  - repoURL: git@github.com:MyChaOS87/sloth.git
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     path: deployments/smarthome/grafana-secrets
-  - repoURL: git@github.com:MyChaOS87/sloth.git
+  - repoURL: https://github.com/MyChaOS87/sloth.git
     targetRevision: main
     path: deployments/smarthome/grafana-dashboards
   syncPolicy:

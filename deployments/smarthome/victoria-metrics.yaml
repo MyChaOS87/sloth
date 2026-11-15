@@ -8,12 +8,14 @@ spec:
     namespace: victoria-metrics
     server: https://kubernetes.default.svc
   project: smarthome
-  source:
-    repoURL: https://victoriametrics.github.io/helm-charts/
+  sources:
+  - repoURL: https://victoriametrics.github.io/helm-charts/
     targetRevision: 0.50.0
     chart: victoria-metrics-single
     helm:
       releaseName: victoria-metrics
+      valueFiles:
+        - $private/values/victoria-metrics.yaml
       values: |
         rbac:
           create: false
@@ -60,20 +62,9 @@ spec:
             enabled: true
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
-            hosts:
-              - name: victoria.rock.k8s.example.com
-                path:
-                  - /
-                port: http
-              - name: victoria.internal.k8s.example.com
-                path:
-                  - /
-                port: http
-            tls:
-              - secretName: victoria-rock-k8s-example-com-tls
-                hosts:
-                  - victoria.rock.k8s.example.com
-                  - victoria.internal.k8s.example.com
+  - repoURL: git@github.com:MyChaOS87/sloth-private.git
+    targetRevision: main
+    ref: private
   syncPolicy:
     automated:
       prune: true
