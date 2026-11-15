@@ -9,43 +9,43 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   sources:
-  - repoURL: https://kubernetes-sigs.github.io/external-dns/
-    chart: external-dns
-    targetRevision: 1.23.0
-    helm:
-      valueFiles:
-        - $private/values/external-dns.yaml
-      values: |       
-        sources:
-          - service
-          - ingress
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: 1.23.0
+      helm:
+        valueFiles:
+          - $private/values/external-dns.yaml
+        values: |
+          sources:
+            - service
+            - ingress
 
-        policy: sync
+          policy: sync
 
-        provider:
-          name: google
+          provider:
+            name: google
 
-        extraVolumeMounts:
-          - name: gcloud-sa
-            mountPath: /etc/kubernetes/
-            readOnly: true
-        
-        extraVolumes:
-          - name: gcloud-sa
-            secret:
-              secretName: gcloud-external-dns 
-              items:
-                - key: gcloud-external-dns.key.json
-                  path: gcloud-key.json 
-        env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/kubernetes/gcloud-key.json
+          extraVolumeMounts:
+            - name: gcloud-sa
+              mountPath: /etc/kubernetes/
+              readOnly: true
 
-        podAnnotations:
-          use-metadata.version-checker.io/external-dns: "true"
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    ref: private
+          extraVolumes:
+            - name: gcloud-sa
+              secret:
+                secretName: gcloud-external-dns
+                items:
+                  - key: gcloud-external-dns.key.json
+                    path: gcloud-key.json
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/kubernetes/gcloud-key.json
+
+          podAnnotations:
+            use-metadata.version-checker.io/external-dns: "true"
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
   syncPolicy:
     automated:
       prune: true

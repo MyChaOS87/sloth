@@ -5,12 +5,12 @@ metadata:
   namespace: argocd
 spec:
   sources:
-  - repoURL: https://github.com/MyChaOS87/sloth.git
-    targetRevision: main
-    path: argocd-base
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: argocd-base
+    - repoURL: https://github.com/MyChaOS87/sloth.git
+      targetRevision: main
+      path: argocd-base
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: argocd-base
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -28,12 +28,12 @@ metadata:
 spec:
   description: Argocd Project
   sourceRepos:
-  - '*'
+    - '*'
   destinations:
-  - namespace: argocd
-    server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
+    - group: '*'
+      kind: '*'
   orphanedResources:
     warn: false

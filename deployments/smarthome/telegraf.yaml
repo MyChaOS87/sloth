@@ -43,7 +43,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies/+/+/+/power"
                   - "shellies/+/+/+/energy"
                   - "shellies/+/+/+/voltage"
@@ -63,7 +63,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "warp2/22hg/meter/values"
                 data_format: "json_v2"
                 topic_parsing:
@@ -77,7 +77,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "warp2/22hg/meters/0/values"
                 data_format: "json_v2"
                 topic_parsing:
@@ -134,7 +134,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies_plug/+/status/switch:0"
                 tags:
                   shelly_type: "relay"
@@ -176,7 +176,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies_plus/+/status/temperature:0"
                 data_format: "json_v2"
                 topic_parsing:
@@ -191,7 +191,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies_plus/+/status/humidity:0"
                 data_format: "json_v2"
                 topic_parsing:
@@ -206,7 +206,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies_pro/+/status/em:0"
                 data_format: "json_v2"
                 topic_parsing:
@@ -262,7 +262,7 @@ spec:
             - mqtt_consumer:
                 servers:
                   - "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
-                topics: 
+                topics:
                   - "shellies_blu/BLE/ht/+"
                 data_format: "json_v2"
                 topic_parsing:
@@ -292,75 +292,75 @@ spec:
                 configuration_type: "register"
                 workarounds:
                   close_connection_after_gather: true
-                holding_registers: 
+                holding_registers:
                 - name: "CurrentBLState"
                   byte_order: "CDAB"
                   data_type: "UINT32"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 472
                     - 473
                 - name: "RamIdxT1"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 132
                     - 133
                 - name: "RamIdxT2"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 134
-                    - 135 
+                    - 135
                 - name: "RamIdxT3"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 136
                     - 137
                 - name: "RamIdxT4"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 138
                     - 139
                 - name: "RomIdxSpeedLevel"
                   byte_order: "CDAB"
                   data_type: "UINT32"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 324
                     - 325
                 - name: "HALTaho1"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 100
                     - 101
                 - name: "HALTaho2"
                   byte_order: "CDAB"
                   data_type: "FLOAT32-IEEE"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 102
                     - 103
                 - name: "RamIdxBypassActualState"
                   byte_order: "CDAB"
                   data_type: "UINT32"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 198
                     - 199
                 - name: "VOC"
                   byte_order: "CDAB"
                   data_type: "UINT32"
                   scale: !!float 1.0000001
-                  address: 
+                  address:
                     - 430
                     - 431
   syncPolicy:

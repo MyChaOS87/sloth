@@ -5,39 +5,39 @@ metadata:
   namespace: argocd
 spec:
   sources:
-  - repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 10.14.0
-    chart: argo-cd
-    helm:
-      valueFiles:
-        - $private/values/argocd.yaml
-      values: |
-        global:
-          networkPolicy:
-            create: false
-        dex:
-          enabled: false
-        configs:
-          params: 
-            server.insecure: true
-          rbac:
-            policy.csv: |
-              g, admins, role:admin
-        server:
-          ingress:
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt
-            enabled: true
-            tls: true
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    ref: private
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: argocd-base/argocd-secrets
+    - repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: 10.14.0
+      chart: argo-cd
+      helm:
+        valueFiles:
+          - $private/values/argocd.yaml
+        values: |
+          global:
+            networkPolicy:
+              create: false
+          dex:
+            enabled: false
+          configs:
+            params:
+              server.insecure: true
+            rbac:
+              policy.csv: |
+                g, admins, role:admin
+          server:
+            ingress:
+              annotations:
+                cert-manager.io/cluster-issuer: letsencrypt
+              enabled: true
+              tls: true
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: argocd-base/argocd-secrets
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd 
+    namespace: argocd
   project: argocd-base
   syncPolicy:
     automated:

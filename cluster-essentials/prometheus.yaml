@@ -9,34 +9,34 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   sources:
-  - repoURL: https://prometheus-community.github.io/helm-charts
-    targetRevision: 29.41.0
-    chart: prometheus
-    helm:
-      valueFiles:
-        - $private/values/prometheus.yaml
-      values: |
-        server:
-          ingress:
-            annotations:
-              cert-manager.io/cluster-issuer: letsencrypt
-              traefik.ingress.kubernetes.io/router.middlewares: oidc-chain-authelia-auth@kubernetescrd
-            enabled: true
-          persistentVolume:
-            enabled: true
-            size: 100Gi
-            storageClass: longhorn
-        prometheus-node-exporter:
-          nodeSelector:
-            node-role.kubernetes.io/monitoring: "true"
-          tolerations:
-            - effect: NoSchedule
-              operator: Exists
-            - key: dedicated
-              operator: Exists
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    ref: private
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      targetRevision: 29.41.0
+      chart: prometheus
+      helm:
+        valueFiles:
+          - $private/values/prometheus.yaml
+        values: |
+          server:
+            ingress:
+              annotations:
+                cert-manager.io/cluster-issuer: letsencrypt
+                traefik.ingress.kubernetes.io/router.middlewares: oidc-chain-authelia-auth@kubernetescrd
+              enabled: true
+            persistentVolume:
+              enabled: true
+              size: 100Gi
+              storageClass: longhorn
+          prometheus-node-exporter:
+            nodeSelector:
+              node-role.kubernetes.io/monitoring: "true"
+            tolerations:
+              - effect: NoSchedule
+                operator: Exists
+              - key: dedicated
+                operator: Exists
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
   syncPolicy:
     automated:
       prune: true

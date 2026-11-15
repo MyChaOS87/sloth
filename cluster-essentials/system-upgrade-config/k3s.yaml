@@ -8,13 +8,13 @@ spec:
   cordon: true
   nodeSelector:
     matchExpressions:
-    - key: node-role.kubernetes.io/control-plane
-      operator: In
-      values:
-      - "true"
-    # Kairos-managed nodes are upgraded atomically via kairos-operator
-    - key: kairos.io/managed
-      operator: DoesNotExist
+      - key: node-role.kubernetes.io/control-plane
+        operator: In
+        values:
+          - "true"
+      # Kairos-managed nodes are upgraded atomically via kairos-operator
+      - key: kairos.io/managed
+        operator: DoesNotExist
   serviceAccountName: system-upgrade
   upgrade:
     image: rancher/k3s-upgrade
@@ -31,17 +31,17 @@ spec:
   cordon: true
   nodeSelector:
     matchExpressions:
-    - key: node-role.kubernetes.io/control-plane
-      operator: DoesNotExist
-    - key: kairos.io/managed
-      operator: DoesNotExist
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+      - key: kairos.io/managed
+        operator: DoesNotExist
   tolerations:
-  - key: dedicated
-    operator: Exists
+    - key: dedicated
+      operator: Exists
   prepare:
     args:
-    - prepare
-    - server-plan
+      - prepare
+      - server-plan
     image: rancher/k3s-upgrade
   serviceAccountName: system-upgrade
   upgrade:

@@ -4,7 +4,7 @@ metadata:
   name: metallb-auto-pool
 spec:
   addresses:
-  - 192.168.1.50-192.168.1.99
+    - 192.168.1.50-192.168.1.99
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -12,7 +12,7 @@ metadata:
   name: metallb-reserved-pool
 spec:
   addresses:
-  - 192.168.1.30-192.168.1.49
+    - 192.168.1.30-192.168.1.49
   autoAssign: false
 ---
 apiVersion: metallb.io/v1beta1

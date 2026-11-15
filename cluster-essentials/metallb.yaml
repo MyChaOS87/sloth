@@ -26,22 +26,22 @@ spec:
     namespace: metallb
   project: cluster-essentials
   ignoreDifferences:
-  - group: "*"
-    kind: CustomResourceDefinition
-    name: bgppeers.metallb.io
-    jsonPointers:
-    - /spec/conversion/webhook/clientConfig/caBundle
-  - group: "*"
-    kind: CustomResourceDefinition
-    name: addresspools.metallb.io
-    jsonPointers:
-    - /spec/conversion/webhook/clientConfig/caBundle
+    - group: "*"
+      kind: CustomResourceDefinition
+      name: bgppeers.metallb.io
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
+    - group: "*"
+      kind: CustomResourceDefinition
+      name: addresspools.metallb.io
+      jsonPointers:
+        - /spec/conversion/webhook/clientConfig/caBundle
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - RespectIgnoreDifferences=true
+      - RespectIgnoreDifferences=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -54,12 +54,12 @@ spec:
     server: https://kubernetes.default.svc
   project: cluster-essentials
   sources:
-  - repoURL: https://github.com/MyChaOS87/sloth.git
-    targetRevision: main
-    path: cluster-essentials/metallb-config
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: cluster-essentials/metallb-config
+    - repoURL: https://github.com/MyChaOS87/sloth.git
+      targetRevision: main
+      path: cluster-essentials/metallb-config
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: cluster-essentials/metallb-config
   syncPolicy:
     automated:
       prune: true

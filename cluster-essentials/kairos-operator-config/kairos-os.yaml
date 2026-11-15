@@ -1,4 +1,3 @@
----
 # Note: In kairos-operator, each NodeOpUpgrade creates a child NodeOp with the same metadata.name.
 # When upgrading to a newer image tag on Day 2, update both metadata.name and spec.image so
 # ArgoCD creates a fresh NodeOpUpgrade rollout (and prunes the completed one).

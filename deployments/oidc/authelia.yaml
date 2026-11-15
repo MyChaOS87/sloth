@@ -9,120 +9,120 @@ spec:
     server: https://kubernetes.default.svc
   project: oidc
   sources:
-  - repoURL: https://charts.authelia.com
-    targetRevision: 0.11.22
-    chart: authelia
-    helm:
-      valueFiles:
-        - $private/values/authelia.yaml
-      values: |
-        versionOverride: '4.39.28'
-        image:
-          tag: '4.39.28'
-        pod:
-          kind: Deployment
-          replicas: 1
-          strategy:
-            type: Recreate
-          selectors:
-            nodeSelector:
-              node-role.kubernetes.io/storage: "true"
-          resources:
-            requests:
-              cpu: 25m
-              memory: 64Mi
-            limits:
-              memory: 192Mi
-        persistence:
-          enabled: true
-          storageClass: longhorn
-          size: 1Gi
-          accessModes:
-            - ReadWriteOnce
-        secret:
-          existingSecret: authelia-secret
-          additionalSecrets:
-            authelia-jwks-secret:
-              path: jwks
-              items:
-                - key: oidc.jwk.RS256.pem
-                  path: oidc.jwk.RS256.pem
-            authelia-users:
-              path: users
-            authelia-smtp-secret:
-              items:
-                - key: notifier.smtp.password.txt
+    - repoURL: https://charts.authelia.com
+      targetRevision: 0.11.22
+      chart: authelia
+      helm:
+        valueFiles:
+          - $private/values/authelia.yaml
+        values: |
+          versionOverride: '4.39.28'
+          image:
+            tag: '4.39.28'
+          pod:
+            kind: Deployment
+            replicas: 1
+            strategy:
+              type: Recreate
+            selectors:
+              nodeSelector:
+                node-role.kubernetes.io/storage: "true"
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 192Mi
+          persistence:
+            enabled: true
+            storageClass: longhorn
+            size: 1Gi
+            accessModes:
+              - ReadWriteOnce
+          secret:
+            existingSecret: authelia-secret
+            additionalSecrets:
+              authelia-jwks-secret:
+                path: jwks
+                items:
+                  - key: oidc.jwk.RS256.pem
+                    path: oidc.jwk.RS256.pem
+              authelia-users:
+                path: users
+              authelia-smtp-secret:
+                items:
+                  - key: notifier.smtp.password.txt
+                    path: notifier.smtp.password.txt
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+            tls:
+              enabled: true
+              secret: authelia-tls
+            traefikCRD:
+              enabled: true
+              disableIngressRoute: true
+          configMap:
+            theme: auto
+            default_2fa_method: webauthn
+            ntp:
+              disable_failure: true
+            totp:
+              disable: false
+            webauthn:
+              disable: false
+              enable_passkey_login: true
+              experimental_enable_passkey_uv_two_factors: true
+              experimental_enable_passkey_upgrade: true
+            authentication_backend:
+              password_reset:
+                disable: true
+              password_change:
+                disable: true
+              file:
+                enabled: true
+                path: /secrets/users/users_database.yml
+                watch: true
+            storage:
+              local:
+                enabled: true
+                path: /config/db.sqlite3
+            notifier:
+              disable_startup_check: false
+              smtp:
+                enabled: true
+                password:
+                  secret_name: authelia-smtp-secret
                   path: notifier.smtp.password.txt
-        ingress:
-          enabled: true
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt
-          tls:
-            enabled: true
-            secret: authelia-tls
-          traefikCRD:
-            enabled: true
-            disableIngressRoute: true
-        configMap:
-          theme: auto
-          default_2fa_method: webauthn
-          ntp:
-            disable_failure: true
-          totp:
-            disable: false
-          webauthn:
-            disable: false
-            enable_passkey_login: true
-            experimental_enable_passkey_uv_two_factors: true
-            experimental_enable_passkey_upgrade: true
-          authentication_backend:
-            password_reset:
-              disable: true
-            password_change:
-              disable: true
-            file:
-              enabled: true
-              path: /secrets/users/users_database.yml
-              watch: true
-          storage:
-            local:
-              enabled: true
-              path: /config/db.sqlite3
-          notifier:
-            disable_startup_check: false
-            smtp:
-              enabled: true
-              password:
-                secret_name: authelia-smtp-secret
-                path: notifier.smtp.password.txt
-          access_control:
-            default_policy: deny
-          identity_providers:
-            oidc:
-              enabled: true
-              enforce_pkce: public_clients_only
-              jwks:
-                - algorithm: RS256
-                  use: sig
-                  key:
-                    path: /secrets/jwks/oidc.jwk.RS256.pem
-              cors:
-                endpoints:
-                  - authorization
-                  - token
-                  - revocation
-                  - introspection
-                  - userinfo
-                allowed_origins_from_client_redirect_uris: true
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    ref: private
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: deployments/oidc/authelia-secrets
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: deployments/oidc/authelia-config
+            access_control:
+              default_policy: deny
+            identity_providers:
+              oidc:
+                enabled: true
+                enforce_pkce: public_clients_only
+                jwks:
+                  - algorithm: RS256
+                    use: sig
+                    key:
+                      path: /secrets/jwks/oidc.jwk.RS256.pem
+                cors:
+                  endpoints:
+                    - authorization
+                    - token
+                    - revocation
+                    - introspection
+                    - userinfo
+                  allowed_origins_from_client_redirect_uris: true
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: deployments/oidc/authelia-secrets
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: deployments/oidc/authelia-config
   syncPolicy:
     automated:
       prune: true

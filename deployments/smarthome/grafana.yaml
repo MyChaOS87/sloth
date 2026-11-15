@@ -9,94 +9,94 @@ spec:
     server: https://kubernetes.default.svc
   project: smarthome
   sources:
-  - repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 10.5.15
-    chart: grafana
-    helm:
-      valueFiles:
-        - $private/values/grafana.yaml
-      values: |
-        ingress:
-          enabled: true
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt
-        admin:
-          existingSecret: grafana-secret
-        datasources:
-          datatasources.yaml:
-            apiVersion: 1
-            datasources:
-            - name: VictoriaMetrics
-              uid: victoriametrics
-              type: prometheus
-              url: "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428"
-              isDefault: true
-            - name: Prometheus
-              type: prometheus
-              url: 'http://prometheus-server.prometheus.svc.cluster.local'
-        envValueFrom:
-          GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
-            secretKeyRef:
-              name: grafana-client-secret
-              key: client-secret
-        env:
-          GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
-        dashboardProviders:
-          dashboardproviders.yaml:
-            apiVersion: 1
-            providers:
-            - name: 'default'
-              orgId: 1
-              folder: ''
-              type: file
-              disableDeletion: false
-              editable: true
-              options:
-                path: /var/lib/grafana/dashboards/default
-        dashboards:
-          default:
-            prometheus-stats:
-              gnetId: 15489
-              datasource: Prometheus
-            version-checker:
-              gnetId: 12833
-              datasource: Prometheus
-            kubernetes-cluster:
-              gnetId: 15282
-              datasource: Prometheus
-            victoria-metrics:
-              gnetId: 10229
-              datasource: VictoriaMetrics
-        sidecar:
+    - repoURL: https://grafana.github.io/helm-charts
+      targetRevision: 10.5.15
+      chart: grafana
+      helm:
+        valueFiles:
+          - $private/values/grafana.yaml
+        values: |
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+          admin:
+            existingSecret: grafana-secret
+          datasources:
+            datatasources.yaml:
+              apiVersion: 1
+              datasources:
+              - name: VictoriaMetrics
+                uid: victoriametrics
+                type: prometheus
+                url: "http://victoria-metrics.victoria-metrics.svc.cluster.local:8428"
+                isDefault: true
+              - name: Prometheus
+                type: prometheus
+                url: 'http://prometheus-server.prometheus.svc.cluster.local'
+          envValueFrom:
+            GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+              secretKeyRef:
+                name: grafana-client-secret
+                key: client-secret
+          env:
+            GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+              - name: 'default'
+                orgId: 1
+                folder: ''
+                type: file
+                disableDeletion: false
+                editable: true
+                options:
+                  path: /var/lib/grafana/dashboards/default
           dashboards:
-            enabled: true
-            label: grafana_dashboard
-            labelValue: "1"
-        grafana.ini:
-          auth.generic_oauth:
-            enabled: true
-            name: Authelia
-            allow_sign_up: true
-            client_id: grafana
-            empty_scopes: false
-            scopes: openid profile email groups
-            auth_style: InHeader
-            use_pkce: true
-            email_attribute_path: email
-            login_attribute_path: preferred_username
-            name_attribute_path: name
-            groups_attribute_path: groups
-            role_attribute_path: contains(groups[*], 'admins') && 'Admin' || contains(groups[*], 'editors') && 'Editor' || 'Viewer'
-            role_attribute_strict: true
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    ref: private
-  - repoURL: git@github.com:MyChaOS87/sloth-private.git
-    targetRevision: main
-    path: deployments/smarthome/grafana-secrets
-  - repoURL: https://github.com/MyChaOS87/sloth.git
-    targetRevision: main
-    path: deployments/smarthome/grafana-dashboards
+            default:
+              prometheus-stats:
+                gnetId: 15489
+                datasource: Prometheus
+              version-checker:
+                gnetId: 12833
+                datasource: Prometheus
+              kubernetes-cluster:
+                gnetId: 15282
+                datasource: Prometheus
+              victoria-metrics:
+                gnetId: 10229
+                datasource: VictoriaMetrics
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+          grafana.ini:
+            auth.generic_oauth:
+              enabled: true
+              name: Authelia
+              allow_sign_up: true
+              client_id: grafana
+              empty_scopes: false
+              scopes: openid profile email groups
+              auth_style: InHeader
+              use_pkce: true
+              email_attribute_path: email
+              login_attribute_path: preferred_username
+              name_attribute_path: name
+              groups_attribute_path: groups
+              role_attribute_path: contains(groups[*], 'admins') && 'Admin' || contains(groups[*], 'editors') && 'Editor' || 'Viewer'
+              role_attribute_strict: true
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      path: deployments/smarthome/grafana-secrets
+    - repoURL: https://github.com/MyChaOS87/sloth.git
+      targetRevision: main
+      path: deployments/smarthome/grafana-dashboards
   syncPolicy:
     automated:
       prune: true
