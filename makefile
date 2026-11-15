@@ -102,6 +102,14 @@ check.images: checkPrerequisites.go checkPrerequisites.helm checkPrerequisites.y
 .PHONY: check
 check: hooks.install check.blacklist check.yaml check.manifests check.helm
 
+.PHONY: check.commit-msg
+check.commit-msg: checkPrerequisites.go
+	@if [ -n "$(COMMIT_MSG_FILE)" ]; then \
+		$(call GO_TOOL,commitlint) lint --config .commitlint.yaml --message "$(COMMIT_MSG_FILE)"; \
+	else \
+		git log -1 --pretty=%B | $(call GO_TOOL,commitlint) lint --config .commitlint.yaml; \
+	fi
+
 .PHONY: sealed-secrets.install
 sealed-secrets.install: checkPrerequisites.helm checkPrerequisites.yq
 	helm repo add sealed-secrets https://bitnami.github.io/sealed-secrets

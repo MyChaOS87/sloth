@@ -1,0 +1,36 @@
+min-version: v0.12.0
+formatter: default
+rules:
+  - header-min-length
+  - header-max-length
+  - type-enum
+  - type-empty
+  - description-empty
+  - body-leading-blank
+severity:
+  default: error
+  rules: {}
+settings:
+  body-leading-blank:
+    argument: null
+    flags: {}
+  description-empty:
+    argument: null
+    flags: {}
+  header-min-length:
+    argument: 10
+    flags: {}
+  header-max-length:
+    argument: 100
+    flags: {}
+  type-empty:
+    argument: null
+    flags: {}
+  type-enum:
+    argument:
+      - feat
+      - chore
+      - bugfix
+    flags: {}
+disable-default-ignores: false
+ignores: []

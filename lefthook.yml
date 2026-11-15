@@ -11,6 +11,8 @@ commit-msg:
   commands:
     leak-guard-commit-msg:
       run: ./scripts/check-blacklist.sh --warn --commit-msg {1}
+    commit-format:
+      run: 'make --no-print-directory check.commit-msg COMMIT_MSG_FILE="{1}" || { echo "WARN: commitlint format check failed"; true; }'
 
 pre-push:
   commands:

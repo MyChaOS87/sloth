@@ -17,7 +17,7 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 | `kubeseal` | Bitnami Sealed Secrets CLI for encrypting secrets against the cluster key | `make checkPrerequisites.kubeseal` |
 | `go` | Runs pinned Go linters via `go tool` from `tools/<tool>/` cached in `$GOCACHE`, and builds `.cache/bin/lefthook` | `make hooks.install` |
 
-Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/) (`lefthook`, `yamlfmt`, `conftest`, `kubeconform`, `pluto`, `gitleaks`, `crane`) with `dummy.go` blank imports and run via Go's native `$GOCACHE`-backed `go tool` mechanism (shared by `sloth-private` via `SLOTH_DIR`); only `lefthook` is compiled to `.cache/bin/lefthook` for `.git/hooks/*`.
+Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/) (`lefthook`, `yamlfmt`, `conftest`, `kubeconform`, `pluto`, `gitleaks`, `crane`, `commitlint`) with `dummy.go` blank imports and run via Go's native `$GOCACHE`-backed `go tool` mechanism (shared by `sloth-private` via `SLOTH_DIR`); only `lefthook` is compiled to `.cache/bin/lefthook` for `.git/hooks/*`.
 
 ---
 
@@ -38,6 +38,7 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 | `make check.helm` | Run [`scripts/check-helm.sh`](../scripts/check-helm.sh): `helm lint --strict` on local charts, plus cached `helm template` and `kubectl kustomize --enable-helm` rendering into `kubeconform -strict` and `pluto detect-files`. |
 | `make check.images` | Opt-in online check ([`scripts/check-images.sh`](../scripts/check-images.sh)) inspecting rendered container images via `crane config --platform linux/arm64` (excluded from `make check` and Git hooks). |
 | `make check` | Full pre-push validation gate: runs `check.blacklist`, `check.yaml`, `check.manifests`, and `check.helm`. |
+| `make check.commit-msg` | Standalone conventional commit format check ([`.commitlint.yaml`](../.commitlint.yaml) via `commitlint`; pass `COMMIT_MSG_FILE=...` to check a specific message file, otherwise inspects `HEAD`; excluded from `make check`). |
 | `make sealed-secrets.install` | Add `https://bitnami.github.io/sealed-secrets` and install the `sealed-secrets` chart into `kube-system` using the exact version declared in [`cluster-essentials/sealed-secrets.yaml`](../cluster-essentials/sealed-secrets.yaml). |
 | `make sealed-secrets.seal.sshDeployKey` | Execute `./create-and-seal-deploy-key.sh` to generate and seal the GitHub SSH deploy key for Argo CD. |
 | `make sealed-secrets.uninstall` | Uninstall `sealed-secrets` from `kube-system`. |
@@ -97,7 +98,7 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 [`lefthook.yml`](../lefthook.yml) wires [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) and the local `yamlfmt` / `conftest` / `helm` gates across Git hook stages:
 
 * **`pre-commit`**: Runs `scripts/check-blacklist.sh --warn --staged` plus warn-only `make check.yaml` and `make check.manifests` so local/worktree WIP commits are never blocked while surfacing format/policy issues early.
-* **`commit-msg`**: Runs `scripts/check-blacklist.sh --warn --commit-msg <file>` (warns clearly and exits `0`).
+* **`commit-msg`**: Runs `scripts/check-blacklist.sh --warn --commit-msg <file>` and `make check.commit-msg COMMIT_MSG_FILE=<file>` (both warn clearly and exit `0`).
 * **`pre-push`**: Strictly enforces `scripts/check-blacklist.sh --pre-push` (`exit 1` on violations, `exit 2` fail-closed if `blacklist.txt` is missing) and runs `make check` (`check.blacklist`, `check.yaml`, `check.manifests`, `check.helm`).
 * **`make check.blacklist`**: Installs hooks if missing, then strictly scans working-tree files and all reachable commits across history via `--all`.
 
