@@ -1,0 +1,15 @@
+pre-commit:
+  commands:
+    leak-guard-staged:
+      run: ./scripts/check-blacklist.sh --staged
+
+commit-msg:
+  commands:
+    leak-guard-commit-msg:
+      run: ./scripts/check-blacklist.sh --commit-msg {1}
+
+pre-push:
+  commands:
+    leak-guard-pre-push:
+      use_stdin: true
+      run: ./scripts/check-blacklist.sh --pre-push

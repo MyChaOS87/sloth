@@ -14,6 +14,17 @@
 
 ---
 
+## Paired-Repository Contract & Planning Rules (`sloth` + `sloth-private`)
+
+1. **Both Repositories Form One System**: `sloth` (this public architecture repo) and `sloth-private` (at `SLOTH_PRIVATE_DIR`, default `../sloth-private`) belong together. Whenever working in `sloth`, agents **must** also read `${SLOTH_PRIVATE_DIR}/AGENTS.md` and enforce **both** repositories' rules simultaneously (disjoint Helm keys, `blacklist.txt` maintenance, secret sealing discipline, and ARM64/Longhorn/MetricsQL rules).
+2. **Mandatory Per-Repository Plan Split**: Every implementation plan touching the cluster **must** explicitly partition changes into clearly labeled sections:
+   * **Public Repository (`sloth`)** — portable manifests, disjoint base Helm values, scripts, hooks, `example.com` / `example-dns` docs and examples
+   * **Private Repository (`sloth-private`)** — `values/*.yaml` domain/project overlays, `*.sealed.json` secrets, `blacklist.txt` updates, `private/` workloads
+   * **Coordinated Rollout & Sync Order** — exact push order (`sloth-private` first vs. `sloth` first vs. `sync/<topic>` staging) and live Argo CD reconciliation checks.
+3. **Fail-Closed Leak Guard (`lefthook` + `blacklist.txt`)**: `lefthook` runs [`scripts/check-blacklist.sh`](./scripts/check-blacklist.sh) on `pre-commit`, `commit-msg`, and `pre-push` against `${SLOTH_PRIVATE_DIR}/blacklist.txt` plus no-`.env`-file and user-home-path guards. Run `make check` (which also ensures `lefthook` and git hooks are installed) before committing or pushing.
+
+---
+
 ## Knowledgebase Routing Table
 
 Read the specific guide below that matches your current task before modifying any manifests or dashboards:
@@ -50,3 +61,4 @@ Read the specific guide below that matches your current task before modifying an
 6. **Never commit unencrypted secret files** — Plaintext intermediates in `.secrets/` are gitignored and must never be staged or committed.
 7. **Never use raw metrics inside `integrate(keep_last_value(...)[range:step])` subqueries without `avg_over_time(...[step])`** — Always average raw samples across each subquery step (`integrate(keep_last_value(avg_over_time(m[1m]))[14d:1m]) / 3600`) so brief sub-minute appliance pulses (`wasser`, `kaffee`) are integrated accurately while sparse sensor gaps remain forward-filled.
 8. **Never assume upstream container tags support `linux/arm64` blindly** — Always verify multi-arch manifest lists (via `make check.images`) when bumping chart versions. Note: [`cluster-essentials/prometheus.yaml`](./cluster-essentials/prometheus.yaml) is intentionally pinned to `29.41.0` (`v0.94.2`) until `prometheus-community/prometheus` adopts `prometheus-config-reloader >= v0.95.2` (`v0.95.1` lacks `linux/arm64` manifests; see `prometheus-operator/prometheus-operator#8953`).
+9. **Never bypass `lefthook` (`--no-verify`)** — Fix any leak reported by `make check` / `lefthook`, and add newly created private domains, hostnames, project IDs, or private `Application` names to `${SLOTH_PRIVATE_DIR}/blacklist.txt` before adding corresponding tooling or references.

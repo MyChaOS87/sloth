@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := argocd.install
 
 SLOTH_PRIVATE_DIR ?= ../sloth-private
+LEFTHOOK_PKG ?= github.com/evilmartians/lefthook/v2@latest
 SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" cluster-essentials/sealed-secrets.yaml)
 ARGOCDVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.sources[0].targetRevision" argocd-base/argocd.yaml)
 
@@ -16,12 +17,29 @@ checkPrerequisites.helm: checkPrerequisites.kubectl
 checkPrerequisites.yq: 
 	@command -v yq >/dev/null || (echo "ERROR: cannot find tool 'yq'"; false)
 
+.PHONY: checkPrerequisites.jq
+checkPrerequisites.jq:
+	@command -v jq >/dev/null || (echo "ERROR: cannot find tool 'jq'"; false)
+
 .PHONY: checkPrerequisites.kubeseal
 checkPrerequisites.kubeseal: checkPrerequisites.kubectl
 	@command -v kubeseal >/dev/null || (echo "ERROR: cannot find tool 'kubeseal'"; false)
 
+.PHONY: hooks.install
+hooks.install:
+	@if ! command -v lefthook >/dev/null 2>&1; then \
+		command -v go >/dev/null 2>&1 || { echo "ERROR: 'lefthook' is not in PATH and 'go' is not installed to auto-install $(LEFTHOOK_PKG)"; exit 1; }; \
+		echo "Installing lefthook ($(LEFTHOOK_PKG))..."; \
+		go install $(LEFTHOOK_PKG); \
+	fi
+	lefthook install
+
+.PHONY: check
+check: hooks.install
+	./scripts/check-blacklist.sh --all
+
 .PHONY: checkPrerequisites.all
-checkPrerequisites.all: checkPrerequisites.kubectl checkPrerequisites.helm checkPrerequisites.yq checkPrerequisites.kubeseal
+checkPrerequisites.all: checkPrerequisites.kubectl checkPrerequisites.helm checkPrerequisites.yq checkPrerequisites.jq checkPrerequisites.kubeseal hooks.install
 
 .PHONY: sealed-secrets.install
 sealed-secrets.install: checkPrerequisites.helm checkPrerequisites.yq 

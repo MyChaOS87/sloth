@@ -15,16 +15,19 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 | `yq` | YAML processor (extracts chart versions and inline values in [`makefile`](../makefile)) | `make checkPrerequisites.yq` |
 | `jq` | JSON processor (transforms plaintext secrets into `kubeseal` inputs) | `make checkPrerequisites.jq` |
 | `kubeseal` | Bitnami Sealed Secrets CLI for encrypting secrets against the cluster key | `make checkPrerequisites.kubeseal` |
+| `lefthook` | Git hook runner enforcing the `sloth-private/blacklist.txt` leak guard (auto-installed via `go install github.com/evilmartians/lefthook/v2@latest` when missing) | `make hooks.install` |
 
 ---
 
 ## 2. Makefile Target Reference
 
-[`makefile`](../makefile) provides bootstrap and day-2 operational targets for `sealed-secrets` and `argocd`:
+[`makefile`](../makefile) provides bootstrap, leak-guard, and day-2 operational targets for `sealed-secrets`, `lefthook`, and `argocd`:
 
 | Target | Description |
 |--------|-------------|
-| `make checkPrerequisites.all` | Verify `kubectl`, `helm`, `yq`, and `kubeseal` are on `PATH`. |
+| `make checkPrerequisites.all` | Verify `kubectl`, `helm`, `yq`, `jq`, and `kubeseal` are on `PATH`, and invoke `make hooks.install` to install `lefthook` (via `go install` if missing) + Git hooks. |
+| `make hooks.install` | Install `github.com/evilmartians/lefthook/v2@latest` via `go install` if `lefthook` is missing, then run `lefthook install` for `pre-commit`, `commit-msg`, and `pre-push`. |
+| `make check` | Ensure hooks are installed (`hooks.install`), then run `./scripts/check-blacklist.sh --all` across working-tree files (tracked + non-ignored untracked) and all reachable Git commits. |
 | `make sealed-secrets.install` | Add `https://bitnami.github.io/sealed-secrets` and install the `sealed-secrets` chart into `kube-system` using the exact version declared in [`cluster-essentials/sealed-secrets.yaml`](../cluster-essentials/sealed-secrets.yaml). |
 | `make sealed-secrets.seal.sshDeployKey` | Execute `./create-and-seal-deploy-key.sh` to generate and seal the GitHub SSH deploy key for Argo CD. |
 | `make sealed-secrets.uninstall` | Uninstall `sealed-secrets` from `kube-system`. |
@@ -74,3 +77,19 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
   1. All external Helm charts (`spec.source.chart` and `spec.sources[].chart`), outputting `Current` vs `Latest` chart version and `AppVersion`.
   2. Local Helm charts (`deployments/smarthome/mosquitto/Chart.yaml`).
   3. Non-Helm GitHub releases (`rancher/system-upgrade-controller` tag in `cluster-essentials/system-upgrade.yaml`).
+
+---
+
+## 6. Leak Guard (`lefthook.yml` & `scripts/check-blacklist.sh`)
+
+[`lefthook.yml`](../lefthook.yml) wires [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) into Git hooks across all stages:
+
+* **`pre-commit` (`--staged`)**: Scans staged file paths and staged blob contents before committing.
+* **`commit-msg` (`--commit-msg <file>`)**: Scans the commit message before finalizing the commit.
+* **`pre-push` (`--pre-push`)**: Scans all outgoing commit messages, changed/added files, and the tracked `HEAD` tree before pushing.
+* **`make check` (`--all`)**: Installs `lefthook` + hooks if missing, then scans working-tree files (tracked + non-ignored untracked) and all reachable commits across history.
+
+Rules enforced:
+1. **Private Blacklist (`${SLOTH_PRIVATE_DIR}/blacklist.txt`)**: Loaded fail-closed (errors explicitly with `CONFIGURATION ERROR (FAIL-CLOSED)` if missing or empty unless `SLOTH_ALLOW_MISSING_BLACKLIST=1` is set). Supports case-insensitive literal lines and `regex:<pattern>` rules.
+2. **Forbidden `.env` Files (`FORBIDDEN_ENV_FILE`)**: Blocks committing `.env`, `.env.*`, or `*.env` files (such as `.secrets/sloth.env`, `.secrets/rock5b.env`, `.secrets/pi0-lcn.env`).
+3. **No User Home Paths (`HOME_PATH_LEAK`)**: Blocks hardcoded Linux home-directory paths in file paths, file contents, and commit messages.

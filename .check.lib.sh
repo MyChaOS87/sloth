@@ -28,7 +28,9 @@ function assert_no_overwrite {
 function load_sloth_env {
   local repo_root="${1:-$(pwd)}"
   local main_repo_root=""
-  main_repo_root="$(cd "${repo_root}" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd || echo "${repo_root}")"
+  if ! main_repo_root="$(cd "${repo_root}" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)"; then
+    main_repo_root="${repo_root}"
+  fi
 
   for env_file in \
     "${repo_root}/.secrets/sloth.env" \
@@ -40,7 +42,7 @@ function load_sloth_env {
     fi
   done
 
-  SLOTH_PRIVATE_DIR="${SLOTH_PRIVATE_DIR:-${repo_root}/../sloth-private}"
+  SLOTH_PRIVATE_DIR="${SLOTH_PRIVATE_DIR:-${main_repo_root}/../sloth-private}"
   PRIVATE_REPO_URL="${PRIVATE_REPO_URL:-git@github.com:MyChaOS87/sloth-private.git}"
   export SLOTH_PRIVATE_DIR PRIVATE_REPO_URL
 }

@@ -21,6 +21,7 @@ Clone your private overlay repository alongside `sloth` (by default `SLOTH_PRIVA
 ```text
 sloth-private/
 ├── .gitignore
+├── blacklist.txt                                                 # Private tokens/regexes enforced by sloth lefthook hooks
 ├── argocd-base/
 │   ├── private.yaml                                              # Root Application: private (path: private/)
 │   ├── repository-private.sealed.json                            # Dedicated SSH deploy key for private overlay repo
@@ -114,7 +115,12 @@ In steady state, all Git references pin `targetRevision: main`. Use the appropri
    ./create-and-seal-smarthome-secrets.sh
    ```
    Register `../sloth-private/deploy_key.pub` as a read-only Deploy Key on your private overlay GitHub repository and push `sloth-private` (`main`).
-4. **Install Argo CD and trigger GitOps reconciliation**:
+4. **Install `lefthook` leak guard & verify clean repo**:
+   ```bash
+   make check
+   ```
+   This installs `lefthook` (via `go install` if missing), wires `.git/hooks/{pre-commit,commit-msg,pre-push}`, and fails closed if `../sloth-private/blacklist.txt` is missing or empty.
+5. **Install Argo CD and trigger GitOps reconciliation**:
    ```bash
    make argocd.install
    ```

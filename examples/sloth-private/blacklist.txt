@@ -1,0 +1,12 @@
+# Private identifiers that must NEVER appear in public sloth
+# Consumed by sloth/scripts/check-blacklist.sh via lefthook (pre-commit, commit-msg, pre-push).
+#
+# Format:
+#   - Blank lines and lines starting with '#' are ignored.
+#   - Plain lines match case-insensitively as literal substrings.
+#   - Lines prefixed with 'regex:' match case-insensitively as extended regular expressions.
+
+# Replace with your own domain, cloud project ID, and private workload tokens:
+my-private-domain.tld
+my-gcp-project-id
+regex:internal-gateway-[0-9]+
