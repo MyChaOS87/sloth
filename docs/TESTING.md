@@ -6,29 +6,35 @@ Because `sloth` is an infrastructure/GitOps repository rather than a Go codebase
 
 ## 1. Three-Tier Validation Model
 
-### Tier 1: Offline Pre-Commit Manifest & Schema Validation
-Before committing any change to `argocd-base/`, `nodes/`, `cluster-essentials/`, or `deployments/`, validate that the chart or overlay renders cleanly and passes JSON Schema validation:
+### Tier 1: Offline Pre-Commit Manifest, Policy & Schema Validation
+Before committing or pushing any change to `argocd-base/`, `nodes/`, `cluster-essentials/`, or `deployments/`, validate formatting, GitOps policy contracts, and rendered Kubernetes schemas via [`makefile`](../makefile):
 
-1. **Helm Chart Rendering & Schema Check**:
-   Combine private overlay values (e.g., `examples/sloth-private/values/<app>.yaml` or your private overlay checkout) with extracted inline `values` and run `helm template`:
+```bash
+make fmt            # Optional: normalize YAML indentation and whitespace via yamlfmt
+make check          # Runs check.blacklist -> check.yaml -> check.manifests -> check.helm
+```
+
+When developing in CI or without a private overlay checkout, `make check` automatically validates [`examples/sloth-private/`](../examples/sloth-private/) whenever `SLOTH_PRIVATE_DIR` is absent (when simulating CI locally alongside a private checkout, point `SLOTH_PRIVATE_DIR` at a non-existent path so `examples/sloth-private/blacklist.txt` is not loaded as an active blacklist):
+
+```bash
+SLOTH_ALLOW_MISSING_BLACKLIST=1 make check
+# Or locally alongside an existing ../sloth-private checkout:
+SLOTH_ALLOW_MISSING_BLACKLIST=1 SLOTH_PRIVATE_DIR=/nonexistent make check
+```
+
+What `make check` enforces:
+1. **Leak Guard (`make check.blacklist`)**: Verifies no private `blacklist.txt` tokens, `.env` files, or home paths appear in working-tree files or Git history.
+2. **YAML Formatting (`make check.yaml`)**: Checks formatting consistency via `yamlfmt -lint` ([`.yamlfmt.yml`](../.yamlfmt.yml)).
+3. **Manifest & Overlay Policy (`make check.manifests`)**: Evaluates [`policy/`](../policy/) (`secrets.rego`, `configmaps.rego`, `argocd.rego`, `overlays.rego`) via `conftest` to enforce `.sealed.json` integrity, ban plaintext `v1/Secret` manifests (outside allowed hashed auth secrets), validate embedded `ConfigMap` JSON (Grafana dashboards), check Argo CD `Application` sync contracts (`selfHeal: true`, selective `prune`, valid `AppProject`), verify inline `helm.values` YAML syntax, and guarantee disjoint leaf/array keys between inline `helm.values` and `${SLOTH_PRIVATE_DIR}/values/<app>.yaml`.
+4. **Helm & Kustomize Schema + Deprecated API Validation (`make check.helm`)**:
+   - Lints local Helm charts (`deployments/smarthome/mosquitto/`) with `helm lint --strict`.
+   - Renders each Helm `Application` (merging `${SLOTH_PRIVATE_DIR}/values/<app>.yaml` and inline `helm.values`, caching chart `.tgz` archives under `.cache/helm-charts/`) and Kustomize `Application` (`kubectl kustomize --enable-helm`, caching remote bases under `.cache/kustomize/`).
+   - Validates all rendered resources with `kubeconform -strict` (caching CRD schemas from Datree `CRDs-catalog` under `.cache/kubeconform/`) and `pluto detect-files --target-versions k8s=v1.37.0` to catch removed/deprecated Kubernetes APIs early.
+5. **Opt-In Multi-Arch Image Manifest Verification (`linux/arm64`)**:
+   When upgrading major/minor chart versions or changing image tags, verify online that all rendered container image manifests include `linux/arm64` via `crane`:
    ```bash
-   yq '.spec.sources[0].helm.values' cluster-essentials/<app>.yaml > /tmp/<app>-values.yaml
-   helm template <release-name> <repo>/<chart> --version <version> -n <namespace> -f examples/sloth-private/values/<app>.yaml -f /tmp/<app>-values.yaml > /dev/null
+   make check.images
    ```
-   - *Why this matters*: Upstream charts (such as `external-dns` `1.23.0+`) ship strict `values.schema.json` validators that reject missing required fields (`policy: sync`) at template time.
-2. **Local Helm Chart Linting**:
-   For in-repo charts (`deployments/smarthome/mosquitto/`):
-   ```bash
-   helm lint deployments/smarthome/mosquitto
-   helm template mosquitto deployments/smarthome/mosquitto -n mosquitto > /dev/null
-   ```
-3. **Kustomize Overlay Validation**:
-   For Kustomize-sourced applications (`cluster-essentials/system-upgrade.yaml`):
-   ```bash
-   kubectl kustomize https://github.com/rancher/system-upgrade-controller?ref=v0.21.0 > /dev/null
-   ```
-4. **Multi-Arch Image Manifest Verification (`linux/arm64`)**:
-   When upgrading major/minor chart versions on `linux/arm64`, verify the container image tags include an `arm64` manifest in their OCI index before committing.
 
 ---
 

@@ -1,3 +1,4 @@
+.cache/**
 .secrets/**
 node-bootstrap/rock5b/build/**
 

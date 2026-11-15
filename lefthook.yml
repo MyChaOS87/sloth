@@ -2,6 +2,10 @@ pre-commit:
   commands:
     leak-guard-staged:
       run: ./scripts/check-blacklist.sh --warn --staged
+    yaml-lint:
+      run: 'make --no-print-directory check.yaml || { echo "WARN: yamlfmt check failed (will block on pre-push)"; true; }'
+    manifest-policy:
+      run: 'make --no-print-directory check.manifests || { echo "WARN: conftest manifest policy failed (will block on pre-push)"; true; }'
 
 commit-msg:
   commands:
@@ -13,3 +17,5 @@ pre-push:
     leak-guard-pre-push:
       use_stdin: true
       run: ./scripts/check-blacklist.sh --pre-push
+    gitops-check:
+      run: make --no-print-directory check
