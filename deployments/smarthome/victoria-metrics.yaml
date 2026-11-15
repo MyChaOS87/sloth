@@ -62,6 +62,7 @@ spec:
             enabled: true
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: oidc-chain-authelia-auth@kubernetescrd
   - repoURL: git@github.com:MyChaOS87/sloth-private.git
     targetRevision: main
     ref: private

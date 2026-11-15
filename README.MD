@@ -11,7 +11,7 @@ Everything in the cluster is kept as hardware-independent as possible. To deploy
 * [`argocd-base/`](./argocd-base/) — Root App-of-Apps bootstrap manifests (`argocd`, `nodes`, `argocd-cluster-essentials`, `argocd-deployments`).
 * [`nodes/`](./nodes/) — Declarative Server-Side Applied `v1/Node` role labels (`storage`, `speaker`, `monitoring`, `lcn-serial`) and taints.
 * [`cluster-essentials/`](./cluster-essentials/) — Core platform services (`sealed-secrets`, `kube-vip`, `metallb`, `traefik`, `cert-manager`, `external-dns`, `longhorn`, `system-upgrade`, `kairos-operator`, `prometheus`, `version-checker`).
-* [`deployments/`](./deployments/) — Workload stacks (`oidc/keycloak` and `smarthome/{mosquitto,telegraf,victoria-metrics,grafana,automqttion,reverselcn}`).
+* [`deployments/`](./deployments/) — Workload stacks (`oidc/authelia` and `smarthome/{mosquitto,telegraf,victoria-metrics,grafana,automqttion,reverselcn}`).
 * [`examples/sloth-private/`](./examples/sloth-private/) — Reference private overlay skeleton (`example.com`) for replicating `sloth-private`; see [`docs/PRIVATE_OVERLAY.md`](./docs/PRIVATE_OVERLAY.md).
 * [`node-bootstrap/rock5b/`](./node-bootstrap/rock5b/) — Declarative Kairos `cloud-config.yaml` template and per-node config renderer for the 3 Radxa Rock 5B nodes.
 * [`node-bootstrap/pi0-lcn/`](./node-bootstrap/pi0-lcn/) — Zero-touch DietPi SD card generator and idempotent Ansible playbook for `pi0-lcn`.
@@ -25,7 +25,7 @@ Everything in the cluster is kept as hardware-independent as possible. To deploy
 * **Secrets Management**: [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for committing encrypted `SealedSecret` manifests safely to Git
 * **Distributed Block Storage**: [Longhorn](https://longhorn.io) across NVMe SSDs (`COS_PERSISTENT` `/var/lib/longhorn/disk0/`) on the 3 Rock 5B nodes
 * **Networking, Ingress, DNS & PKI**: [MetalLB](https://metallb.universe.tf/) (L2 ARP pools `192.168.1.30–99`), [Traefik](https://traefik.io/traefik/), [cert-manager](https://cert-manager.io/) (Let's Encrypt DNS-01), and [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) (Google Cloud DNS)
-* **Identity & SSO**: [Keycloak](https://www.keycloak.org/) OIDC Single Sign-On for Argo CD and Grafana
+* **Identity & SSO**: [Authelia](https://www.authelia.com/) OIDC + Traefik `ForwardAuth` Single Sign-On (Passkeys/WebAuthn + Argon2id) for Argo CD, Grafana, Longhorn, Prometheus, and VictoriaMetrics
 * **Observability & Telemetry**: [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [VictoriaMetrics](https://victoriametrics.com/), and [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/)
 * **Smarthome & Bus Bridges**: [Mosquitto](https://mosquitto.org/) MQTT broker (`192.168.1.30:1883`), [automqttion](https://github.com/MyChaOS87/automqttion) for declarative MQTT automations, and [reverseLCN](https://github.com/MyChaOS87/reverseLCN) (`lcn2mqtt`) for bidirectional LCN-PKU USB serial $\leftrightarrow$ MQTT bridging on `pi0-lcn`
 

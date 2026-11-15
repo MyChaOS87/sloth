@@ -22,7 +22,7 @@ spec:
             server.insecure: true
           rbac:
             policy.csv: |
-              g, argocd:admin, role:admin
+              g, admins, role:admin
         server:
           ingress:
             annotations:

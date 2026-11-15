@@ -38,7 +38,7 @@ flowchart TD
     end
 
     subgraph Tier3_OIDC["OIDC Stack (deployments/oidc/)"]
-        Keycloak["keycloak (keycloakx 7.4.0)<br/>ns: keycloak"]
+        Authelia["authelia (0.11.22 / 4.39.28)<br/>ns: oidc"]
     end
 
     subgraph Tier3_SH["Smarthome Stack (deployments/smarthome/)"]
@@ -64,7 +64,7 @@ flowchart TD
 
     RootDeployments --> AppOIDC
     RootDeployments --> AppSmarthome
-    AppOIDC --> Keycloak
+    AppOIDC --> Authelia
     AppSmarthome --> Mosquitto
     AppSmarthome --> Telegraf
     AppSmarthome --> VictoriaMetrics
@@ -80,7 +80,7 @@ flowchart TD
 | `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `*` | `argocd` |
 | `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `https://github.com/MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
-| `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `*` (`keycloak`) |
+| `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `oidc` (`authelia`) |
 | `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `victoria-metrics`, `grafana`, `automqttion`, `reverselcn`) |
 | `private` | `sloth-private/private/private.yaml` | `*` | `*` (private workloads & experiments isolated from `sloth`) |
 
@@ -118,13 +118,13 @@ sequenceDiagram
 | Service | Hostname / IP | Exposure Mechanism | TLS / Auth |
 |---------|---------------|--------------------|------------|
 | **K3s Control-Plane API** | `192.168.1.20:6443` (`api.internal.k8s.example.com`, `api.rock.k8s.example.com`) | `kube-vip` L2 ARP Leader Lease (`plndr-cp-lock` on `enP4p65s0`) + `ExternalName` DNS Service (`sloth-private`) | K3s Cluster CA TLS (`:6443`) |
-| **Argo CD UI/API** | `argocd.internal.k8s.example.com`, `argocd.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
+| **Argo CD UI/API** | `argocd.internal.k8s.example.com`, `argocd.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia OIDC |
 | **Traefik Dashboard** | Cluster-internal port-forward | Traefik `IngressRoute` | HTTP / Internal LAN |
-| **Longhorn UI** | `longhorn.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Prometheus UI** | `prometheus.internal.k8s.example.com`, `prometheus.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Keycloak SSO** | `sso.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
-| **Grafana** | `grafana.rock.k8s.example.com`, `grafana.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Keycloak OIDC |
-| **VictoriaMetrics UI/API** | `victoria.rock.k8s.example.com`, `victoria.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS |
+| **Longhorn UI** | `longhorn.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia ForwardAuth |
+| **Prometheus UI** | `prometheus.internal.k8s.example.com`, `prometheus.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia ForwardAuth |
+| **Authelia SSO** | `sso.internal.k8s.example.com`, `sso.rock.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS (Passkey / WebAuthn + Argon2id) |
+| **Grafana** | `grafana.rock.k8s.example.com`, `grafana.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia OIDC |
+| **VictoriaMetrics UI/API** | `victoria.rock.k8s.example.com`, `victoria.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia ForwardAuth |
 | **Mosquitto MQTT** | `192.168.1.30:1883` (`mosquitto.rock.k8s.example.com`, `mosquitto.internal.k8s.example.com`) | MetalLB `LoadBalancer` (`metallb-reserved-pool`) | TCP `:1883` |
 
 ---
@@ -161,6 +161,7 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
   1. **VictoriaMetrics (`victoria-metrics`)**: 16 GiB PVC (`storageClassName: longhorn`, `retentionPeriod: 100y`) storing columnar time-series blocks in `victoria-metrics`.
   2. **Prometheus (`prometheus-server` & `storage-prometheus-alertmanager-0`)**: 100 GiB + 2 GiB Longhorn PVCs storing cluster metrics and alert state in `prometheus`.
   3. **Grafana (`grafana`)**: 10 GiB PVC (`storageClassName: longhorn`) storing Grafana SQLite state and plugin data in `grafana`.
+  4. **Authelia (`authelia`)**: 1 GiB PVC (`storageClassName: longhorn`) storing SQLite state (`/config/db.sqlite3`: WebAuthn credentials, TOTP secrets, OIDC consent sessions) in `oidc`.
 
 ---
 

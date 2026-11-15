@@ -42,7 +42,7 @@ When upgrading multiple components, push and verify in dependency order rather t
 3. **Stage 3 (Cluster Operations)**: `system-upgrade` $\rightarrow$ `version-checker`
 4. **Stage 4 (Storage — Strictly Sequential Minor Versions)**: `longhorn` (`1.11.x` $\rightarrow$ `1.12.x` $\rightarrow$ `1.13.x`)
 5. **Stage 5 (Observability)**: `prometheus` $\rightarrow$ `victoria-metrics` $\rightarrow$ `telegraf` $\rightarrow$ `grafana`
-6. **Stage 6 (SSO & Workloads)**: `keycloak` $\rightarrow$ `mosquitto` $\rightarrow$ `automqttion` $\rightarrow$ `reverselcn`
+6. **Stage 6 (SSO & Workloads)**: `authelia` $\rightarrow$ `mosquitto` $\rightarrow$ `automqttion` $\rightarrow$ `reverselcn`
 
 #### Triggering & Inspecting Reconciliation
 ```bash
@@ -95,7 +95,7 @@ Confirm the sidecar logged `200 OK` from `/api/admin/provisioning/dashboards/rel
   ```
 
 ### Playbook B: Stuck `OrderedReady` StatefulSet Pod on Bad Image Tag
-- **Symptom**: After reverting or fixing a broken image tag on a `StatefulSet` (e.g., `prometheus-alertmanager` or `keycloak`), the `StatefulSet` remains wedged because `pod-0` is in `ImagePullBackOff` and Kubernetes `OrderedReady` policy refuses to recreate a non-Running pod when `currentRevision != updateRevision`.
+- **Symptom**: After reverting or fixing a broken image tag on a `StatefulSet` (e.g., `prometheus-alertmanager`), the `StatefulSet` remains wedged because `pod-0` is in `ImagePullBackOff` and Kubernetes `OrderedReady` policy refuses to recreate a non-Running pod when `currentRevision != updateRevision`.
 - **Resolution** (requires user confirmation):
   ```bash
   kubectl delete pod -n <namespace> <statefulset-pod-0>

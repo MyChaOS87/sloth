@@ -2,11 +2,12 @@ configs:
   cm:
     url: https://argocd.internal.k8s.example.com
     oidc.config: |
-      name: Keycloak
-      issuer: https://sso.internal.k8s.example.com/realms/example
+      name: Authelia
+      issuer: https://sso.internal.k8s.example.com
       clientID: argocd
       clientSecret: $argocd-client-secret:client-secret
-      requestedScopes: ["openid", "profile", "email"]
+      enablePKCEAuthentication: true
+      requestedScopes: ["openid", "profile", "email", "groups"]
 server:
   ingress:
     hostname: argocd.internal.k8s.example.com

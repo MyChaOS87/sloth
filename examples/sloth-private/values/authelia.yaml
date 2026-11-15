@@ -1,0 +1,102 @@
+ingress:
+  rulesOverride:
+    - host: sso.internal.k8s.example.com
+      path: /
+    - host: sso.rock.k8s.example.com
+      path: /
+
+configMap:
+  session:
+    cookies:
+      - domain: k8s.example.com
+        subdomain: sso.internal
+        default_redirection_url: https://grafana.internal.k8s.example.com
+  notifier:
+    smtp:
+      address: submission://smtp.example.com:587
+      username: authelia@example.com
+      sender: "Authelia <authelia@example.com>"
+      identifier: example.com
+      startup_check_address: authelia@example.com
+  access_control:
+    rules:
+      - domain:
+          - longhorn.rock.k8s.example.com
+          - longhorn.internal.k8s.example.com
+          - prometheus.internal.k8s.example.com
+          - prometheus.rock.k8s.example.com
+          - victoria.internal.k8s.example.com
+          - victoria.rock.k8s.example.com
+        policy: two_factor
+        subject:
+          - "group:admins"
+  identity_providers:
+    oidc:
+      authorization_policies:
+        admins_only:
+          default_policy: deny
+          rules:
+            - policy: two_factor
+              subject:
+                - "group:admins"
+        grafana_users:
+          default_policy: deny
+          rules:
+            - policy: two_factor
+              subject:
+                - "group:admins"
+            - policy: two_factor
+              subject:
+                - "group:editors"
+            - policy: two_factor
+              subject:
+                - "group:viewers"
+      clients:
+        - client_id: argocd
+          client_name: Argo CD
+          # Replace with output of ./create-and-seal-oidc-client-secrets.sh
+          client_secret: "$pbkdf2-sha512$310000$c2FsdHNhbHRzYWx0c2FsdA$BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+          public: false
+          authorization_policy: admins_only
+          require_pkce: true
+          pkce_challenge_method: S256
+          redirect_uris:
+            - https://argocd.internal.k8s.example.com/auth/callback
+            - https://argocd.rock.k8s.example.com/auth/callback
+          scopes:
+            - openid
+            - profile
+            - email
+            - groups
+          response_types:
+            - code
+          grant_types:
+            - authorization_code
+          id_token_signed_response_alg: RS256
+          userinfo_signed_response_alg: none
+          token_endpoint_auth_method: client_secret_basic
+        - client_id: grafana
+          client_name: Grafana
+          # Replace with output of ./create-and-seal-oidc-client-secrets.sh
+          client_secret: "$pbkdf2-sha512$310000$c2FsdHNhbHRzYWx0c2FsdA$CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          public: false
+          authorization_policy: grafana_users
+          require_pkce: true
+          pkce_challenge_method: S256
+          redirect_uris:
+            - https://grafana.internal.k8s.example.com/login/generic_oauth
+            - https://grafana.rock.k8s.example.com/login/generic_oauth
+          scopes:
+            - openid
+            - profile
+            - email
+            - groups
+            - offline_access
+          response_types:
+            - code
+          grant_types:
+            - authorization_code
+            - refresh_token
+          id_token_signed_response_alg: RS256
+          userinfo_signed_response_alg: none
+          token_endpoint_auth_method: client_secret_basic

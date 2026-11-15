@@ -55,7 +55,7 @@ All production `Application` manifests must enable automated reconciliation with
 ### Chart Version String Discipline
 - Always match the exact `version` string published in the upstream Helm repository's `index.yaml`:
   - Jetstack charts (`cert-manager`, `version-checker`) require a leading `v` prefix (e.g., `v1.21.3`, `v0.11.0`).
-  - Most other Helm repositories (`argo-cd`, `traefik`, `longhorn`, `prometheus`, `telegraf`, `keycloakx`) omit the `v` prefix (e.g., `10.14.0`, `1.13.0`, `29.41.0`).
+  - Most other Helm repositories (`argo-cd`, `traefik`, `longhorn`, `prometheus`, `telegraf`, `authelia`) omit the `v` prefix (e.g., `10.14.0`, `1.13.0`, `29.41.0`, `0.11.22`).
 
 ---
 

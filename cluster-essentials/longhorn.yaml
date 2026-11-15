@@ -25,6 +25,7 @@ spec:
         ingress:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt
+            traefik.ingress.kubernetes.io/router.middlewares: oidc-chain-authelia-auth@kubernetescrd
           enabled: true
           tls: true
   - repoURL: git@github.com:MyChaOS87/sloth-private.git
