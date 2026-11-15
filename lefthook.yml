@@ -1,12 +1,12 @@
 pre-commit:
   commands:
     leak-guard-staged:
-      run: ./scripts/check-blacklist.sh --staged
+      run: ./scripts/check-blacklist.sh --warn --staged
 
 commit-msg:
   commands:
     leak-guard-commit-msg:
-      run: ./scripts/check-blacklist.sh --commit-msg {1}
+      run: ./scripts/check-blacklist.sh --warn --commit-msg {1}
 
 pre-push:
   commands:

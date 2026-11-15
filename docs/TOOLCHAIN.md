@@ -84,10 +84,10 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 
 [`lefthook.yml`](../lefthook.yml) wires [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) into Git hooks across all stages:
 
-* **`pre-commit` (`--staged`)**: Scans staged file paths and staged blob contents before committing.
-* **`commit-msg` (`--commit-msg <file>`)**: Scans the commit message before finalizing the commit.
-* **`pre-push` (`--pre-push`)**: Scans all outgoing commit messages, changed/added files, and the tracked `HEAD` tree before pushing.
-* **`make check` (`--all`)**: Installs `lefthook` + hooks if missing, then scans working-tree files (tracked + non-ignored untracked) and all reachable commits across history.
+* **`pre-commit` (`--warn --staged`)**: Scans staged file paths and staged blob contents before committing; warns clearly and exits `0` so local and worktree WIP commits never fail.
+* **`commit-msg` (`--warn --commit-msg <file>`)**: Scans the commit message before finalizing the commit; warns clearly and exits `0`.
+* **`pre-push` (`--pre-push`)**: Strictly blocks outgoing commit messages, changed/added files, and the tracked `HEAD` tree before pushing (`exit 1` on violations, `exit 2` fail-closed if `blacklist.txt` is missing).
+* **`make check` (`--all`)**: Installs `lefthook` + hooks if missing, then strictly scans working-tree files (tracked + non-ignored untracked) and all reachable commits across history (`exit 1` / `exit 2`).
 
 Rules enforced:
 1. **Private Blacklist (`${SLOTH_PRIVATE_DIR}/blacklist.txt`)**: Loaded fail-closed (errors explicitly with `CONFIGURATION ERROR (FAIL-CLOSED)` if missing or empty unless `SLOTH_ALLOW_MISSING_BLACKLIST=1` is set). Supports case-insensitive literal lines and `regex:<pattern>` rules.

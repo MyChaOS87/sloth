@@ -61,12 +61,14 @@ RULE_KINDS=()
 RULE_RAWS=()
 RULE_COUNT=0
 SKIPPED_MISSING=0
+WARN_ONLY=0
+WARNED_CONFIG=0
 VIOLATION_COUNT=0
 declare -A SEEN_VIOLATIONS=()
 
 usage() {
   cat >&2 <<'EOF'
-Usage: check-blacklist.sh <--staged | --commit-msg <file> | --pre-push | --all>
+Usage: check-blacklist.sh [--warn] <--staged | --commit-msg <file> | --pre-push | --all>
 EOF
 }
 
@@ -76,6 +78,21 @@ fail_closed_box() {
   local detail="$3"
   local fix="$4"
   local bar="=========================================================================="
+  if (( WARN_ONLY == 1 )); then
+    WARNED_CONFIG=1
+    {
+      printf '\n%s\n' "${bar}"
+      printf '[sloth leak-guard] WARNING (%s) — PRIVATE BLACKLIST UNAVAILABLE\n' "${mode}"
+      printf '%s\n' "${bar}"
+      printf '  Reason : %s\n' "${reason}"
+      printf '           %s\n' "${detail}"
+      printf "  Note   : Commit allowed locally (--warn), but pre-push and 'make check'\n"
+      printf "           WILL FAIL CLOSED until 'sloth-private/blacklist.txt' is valid.\n"
+      printf '  Fix    : %s\n' "${fix}"
+      printf '%s\n\n' "${bar}"
+    } >&2
+    return 0
+  fi
   {
     printf '\n%s\n' "${bar}"
     printf '[sloth leak-guard] BLOCKED (%s) — CONFIGURATION ERROR (FAIL-CLOSED)\n' "${mode}"
@@ -142,6 +159,7 @@ load_blacklist() {
       "Private blacklist file not found:" \
       "${bl_path}" \
       "Ensure 'sloth-private' is checked out at SLOTH_PRIVATE_DIR (default ../sloth-private, or configure .secrets/sloth.env). For clean-room CI only: SLOTH_ALLOW_MISSING_BLACKLIST=1"
+    return 0
   fi
 
   local line_no=0
@@ -166,6 +184,7 @@ load_blacklist() {
           "Invalid empty 'regex:' entry in blacklist.txt:${line_no}" \
           "${bl_path}" \
           "Remove the empty regex: line or provide a valid pattern."
+        continue
       fi
       rc=0
       printf '' | grep -E -i -e "${expr}" >/dev/null 2>&1 || rc=$?
@@ -175,6 +194,7 @@ load_blacklist() {
           "Invalid regex in blacklist.txt:${line_no} ('${expr}')" \
           "${bl_path}" \
           "Fix the extended regular expression in sloth-private/blacklist.txt."
+        continue
       fi
       RULE_LINES+=("${line_no}")
       RULE_KINDS+=("regex")
@@ -199,6 +219,7 @@ load_blacklist() {
       "Private blacklist file contains 0 active rules:" \
       "${bl_path}" \
       "Add at least one private identifier rule to sloth-private/blacklist.txt (or set SLOTH_ALLOW_MISSING_BLACKLIST=1 for clean-room CI)."
+    return 0
   fi
 }
 
@@ -451,7 +472,11 @@ scan_staged() {
 
 scan_commit_msg_file() {
   local msg_file="$1"
-  if [[ ! -f "${msg_file}" ]]; then
+  if [[ ! -r "${msg_file}" ]]; then
+    if (( WARN_ONLY == 1 )); then
+      printf '[sloth leak-guard] WARN (--commit-msg): Commit message file not readable (%s); skipping check.\n' "${msg_file}" >&2
+      return 0
+    fi
     printf 'Commit message file not found: %s\n' "${msg_file}" >&2
     exit 2
   fi
@@ -633,6 +658,11 @@ print_report() {
       "${mode}" "${VIOLATION_COUNT}"
   fi
   if (( VIOLATION_COUNT == 0 )); then
+    if (( WARNED_CONFIG == 1 )); then
+      printf '[sloth leak-guard] WARN (%s): 0 structural violations (private blacklist unavailable; commit allowed).\n' \
+        "${mode}" >&2
+      return 0
+    fi
     printf '[sloth leak-guard] PASS (%s): 0 violations (%d private blacklist rules checked).\n' \
       "${mode}" "${RULE_COUNT}"
     return 0
@@ -640,6 +670,19 @@ print_report() {
 
   local bar="=========================================================================="
   local sep="--------------------------------------------------------------------------"
+  if (( WARN_ONLY == 1 )); then
+    {
+      printf '\n%s\n' "${bar}"
+      printf '[sloth leak-guard] WARNING (%s) — %d VIOLATION(S) DETECTED\n' "${mode}" "${VIOLATION_COUNT}"
+      printf '%s\n' "${bar}"
+      cat "${VIOLATIONS_FILE}"
+      printf '%s\n' "${sep}"
+      printf "[sloth leak-guard] WARN (%s): Commit allowed locally, but pre-push and 'make check' WILL BLOCK until fixed.\n" \
+        "${mode}"
+      printf '%s\n\n' "${bar}"
+    } >&2
+    return 0
+  fi
   {
     printf '\n%s\n' "${bar}"
     printf '[sloth leak-guard] BLOCKED (%s) — %d VIOLATION(S) DETECTED\n' "${mode}" "${VIOLATION_COUNT}"
@@ -654,6 +697,11 @@ print_report() {
 }
 
 main() {
+  if [[ "${1:-}" == "--warn" ]]; then
+    WARN_ONLY=1
+    shift
+  fi
+
   if (( $# < 1 )); then
     usage
     exit 2

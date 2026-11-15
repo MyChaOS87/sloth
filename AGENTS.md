@@ -21,7 +21,7 @@
    * **Public Repository (`sloth`)** — portable manifests, disjoint base Helm values, scripts, hooks, `example.com` / `example-dns` docs and examples
    * **Private Repository (`sloth-private`)** — `values/*.yaml` domain/project overlays, `*.sealed.json` secrets, `blacklist.txt` updates, `private/` workloads
    * **Coordinated Rollout & Sync Order** — exact push order (`sloth-private` first vs. `sloth` first vs. `sync/<topic>` staging) and live Argo CD reconciliation checks.
-3. **Fail-Closed Leak Guard (`lefthook` + `blacklist.txt`)**: `lefthook` runs [`scripts/check-blacklist.sh`](./scripts/check-blacklist.sh) on `pre-commit`, `commit-msg`, and `pre-push` against `${SLOTH_PRIVATE_DIR}/blacklist.txt` plus no-`.env`-file and user-home-path guards. Run `make check` (which also ensures `lefthook` and git hooks are installed) before committing or pushing.
+3. **Fail-Closed Leak Guard (`lefthook` + `blacklist.txt`)**: `lefthook` runs [`scripts/check-blacklist.sh`](./scripts/check-blacklist.sh) across all three stages against `${SLOTH_PRIVATE_DIR}/blacklist.txt` plus no-`.env`-file and user-home-path guards (`pre-commit` and `commit-msg` run with `--warn` so local and worktree commits emit clear warnings without failing, whereas `pre-push` and `make check` strictly block violations and fail closed if `blacklist.txt` is missing). Run `make check` (which also ensures `lefthook` and git hooks are installed) before pushing.
 
 ---
 
