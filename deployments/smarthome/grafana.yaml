@@ -79,10 +79,9 @@ spec:
             allow_sign_up: true
             client_id: grafana
             empty_scopes: false
-            scopes: openid profile email groups offline_access
+            scopes: openid profile email groups
             auth_style: InHeader
             use_pkce: true
-            use_refresh_token: true
             email_attribute_path: email
             login_attribute_path: preferred_username
             name_attribute_path: name
