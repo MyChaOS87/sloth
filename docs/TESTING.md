@@ -11,7 +11,7 @@ Before committing or pushing any change to `argocd-base/`, `nodes/`, `cluster-es
 
 ```bash
 make fmt            # Optional: normalize YAML indentation and whitespace via yamlfmt
-make check          # Runs check.blacklist -> check.yaml -> check.manifests -> check.helm
+make check          # Runs check.blacklist -> check.guard -> check.yaml -> check.manifests -> check.helm
 ```
 
 When developing in CI or without a private overlay checkout, `make check` automatically validates [`examples/sloth-private/`](../examples/sloth-private/) whenever `SLOTH_PRIVATE_DIR` is absent (when simulating CI locally alongside a private checkout, point `SLOTH_PRIVATE_DIR` at a non-existent path so `examples/sloth-private/blacklist.txt` is not loaded as an active blacklist):
@@ -23,7 +23,7 @@ SLOTH_ALLOW_MISSING_BLACKLIST=1 SLOTH_PRIVATE_DIR=/nonexistent make check
 ```
 
 What `make check` enforces:
-1. **Leak Guard (`make check.blacklist`)**: Verifies no private `blacklist.txt` tokens, `.env` files, or home paths appear in working-tree files or Git history.
+1. **Leak & Secret Guard (`make check.blacklist` + `make check.guard`)**: Verifies no private `blacklist.txt` tokens, `.env` files, or home paths appear in working-tree files, Git author/committer identities, or Git history, and runs `gitleaks` ([`.gitleaks.toml`](../.gitleaks.toml)) across repository history and uncommitted changes.
 2. **YAML Formatting (`make check.yaml`)**: Checks formatting consistency via `yamlfmt -lint` ([`.yamlfmt.yml`](../.yamlfmt.yml)).
 3. **Manifest & Overlay Policy (`make check.manifests`)**: Evaluates [`policy/`](../policy/) (`secrets.rego`, `configmaps.rego`, `argocd.rego`, `overlays.rego`) via `conftest` to enforce `.sealed.json` integrity, ban plaintext `v1/Secret` manifests (outside allowed hashed auth secrets), validate embedded `ConfigMap` JSON (Grafana dashboards), check Argo CD `Application` sync contracts (`selfHeal: true`, selective `prune`, valid `AppProject`), verify inline `helm.values` YAML syntax, and guarantee disjoint leaf/array keys between inline `helm.values` and `${SLOTH_PRIVATE_DIR}/values/<app>.yaml`.
 4. **Helm & Kustomize Schema + Deprecated API Validation (`make check.helm`)**:

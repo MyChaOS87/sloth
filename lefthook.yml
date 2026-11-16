@@ -2,6 +2,8 @@ pre-commit:
   commands:
     leak-guard-staged:
       run: ./scripts/check-blacklist.sh --warn --staged
+    secret-guard-staged:
+      run: 'make --no-print-directory check.guard.staged || { echo "WARN: gitleaks staged check failed (will block on pre-push)"; true; }'
     yaml-lint:
       run: 'make --no-print-directory check.yaml || { echo "WARN: yamlfmt check failed (will block on pre-push)"; true; }'
     manifest-policy:

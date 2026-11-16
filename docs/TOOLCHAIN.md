@@ -32,12 +32,14 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 | `make tools-tidy` | Run `go mod tidy` across every module under [`tools/`](../tools/). |
 | `make tools-update` | Bump each [`tools/`](../tools/) `go.mod` to the active `go env GOVERSION` (`major.minor`, dropping any `toolchain` line), update direct module dependencies (`go get -u`), and tidy. |
 | `make fmt` | Normalize YAML formatting across repository manifests in place via `yamlfmt` ([`.yamlfmt.yml`](../.yamlfmt.yml)). |
-| `make check.blacklist` | Ensure hooks are installed (`hooks.install`), then run [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) `--all` across working-tree files and all reachable Git commits. |
+| `make check.blacklist` | Run [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) `--all` across working-tree files, Git author/committer identities, and all reachable Git commits. |
+| `make check.guard` | Run `gitleaks` ([`.gitleaks.toml`](../.gitleaks.toml)) across full Git history and working-tree changes (`--pre-commit`). |
+| `make check.guard.staged` | Run `gitleaks --staged` against staged changes prior to committing. |
 | `make check.yaml` | Verify YAML formatting without modifying files (`yamlfmt -lint`). |
 | `make check.manifests` | Validate raw Kubernetes manifests, `.sealed.json` rules, Argo CD Application contracts, JSON ConfigMaps, and disjoint `helm.values` vs `${SLOTH_PRIVATE_DIR}/values/*.yaml` keys via `conftest` ([`policy/`](../policy/)). |
 | `make check.helm` | Run [`scripts/check-helm.sh`](../scripts/check-helm.sh): `helm lint --strict` on local charts, plus cached `helm template` and `kubectl kustomize --enable-helm` rendering into `kubeconform -strict` and `pluto detect-files`. |
 | `make check.images` | Opt-in online check ([`scripts/check-images.sh`](../scripts/check-images.sh)) inspecting rendered container images via `crane config --platform linux/arm64` (excluded from `make check` and Git hooks). |
-| `make check` | Full pre-push validation gate: runs `check.blacklist`, `check.yaml`, `check.manifests`, and `check.helm`. |
+| `make check` | Full pre-push validation gate: installs hooks, then runs `check.blacklist`, `check.guard`, `check.yaml`, `check.manifests`, and `check.helm`. |
 | `make check.commit-msg` | Standalone conventional commit format check ([`.commitlint.yaml`](../.commitlint.yaml) via `commitlint`; pass `COMMIT_MSG_FILE=...` to check a specific message file, otherwise inspects `HEAD`; excluded from `make check`). |
 | `make sealed-secrets.install` | Add `https://bitnami.github.io/sealed-secrets` and install the `sealed-secrets` chart into `kube-system` using the exact version declared in [`cluster-essentials/sealed-secrets.yaml`](../cluster-essentials/sealed-secrets.yaml). |
 | `make sealed-secrets.seal.sshDeployKey` | Execute `./create-and-seal-deploy-key.sh` to generate and seal the GitHub SSH deploy key for Argo CD. |
@@ -93,16 +95,17 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 
 ---
 
-## 6. Leak Guard & Git Hooks (`lefthook.yml` & `scripts/check-blacklist.sh`)
+## 6. Leak Guard & Git Hooks (`lefthook.yml`, `.gitleaks.toml` & `scripts/check-blacklist.sh`)
 
-[`lefthook.yml`](../lefthook.yml) wires [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) and the local `yamlfmt` / `conftest` / `helm` gates across Git hook stages:
+[`lefthook.yml`](../lefthook.yml) wires [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh), `gitleaks` ([`.gitleaks.toml`](../.gitleaks.toml)), and the local `yamlfmt` / `conftest` / `helm` gates across Git hook stages:
 
-* **`pre-commit`**: Runs `scripts/check-blacklist.sh --warn --staged` plus warn-only `make check.yaml` and `make check.manifests` so local/worktree WIP commits are never blocked while surfacing format/policy issues early.
+* **`pre-commit`**: Runs `scripts/check-blacklist.sh --warn --staged` plus warn-only `make check.guard.staged`, `make check.yaml`, and `make check.manifests` so local/worktree WIP commits are never blocked while surfacing format, secret, and policy issues early.
 * **`commit-msg`**: Runs `scripts/check-blacklist.sh --warn --commit-msg <file>` and `make check.commit-msg COMMIT_MSG_FILE=<file>` (both warn clearly and exit `0`).
-* **`pre-push`**: Strictly enforces `scripts/check-blacklist.sh --pre-push` (`exit 1` on violations, `exit 2` fail-closed if `blacklist.txt` is missing) and runs `make check` (`check.blacklist`, `check.yaml`, `check.manifests`, `check.helm`).
-* **`make check.blacklist`**: Installs hooks if missing, then strictly scans working-tree files and all reachable commits across history via `--all`.
+* **`pre-push`**: Strictly enforces `scripts/check-blacklist.sh --pre-push` (`exit 1` on violations, `exit 2` fail-closed if `blacklist.txt` is missing) and runs `make check` (`check.blacklist`, `check.guard`, `check.yaml`, `check.manifests`, `check.helm`).
+* **`make check.blacklist`**: Strictly scans working-tree files, Git author/committer identities, and all reachable commits across history via `--all`.
+* **`make check.guard`**: Runs `gitleaks git` across full repository history and working-tree changes (`--pre-commit`).
 
 Rules enforced:
-1. **Private Blacklist (`${SLOTH_PRIVATE_DIR}/blacklist.txt`)**: Loaded fail-closed (errors explicitly with `CONFIGURATION ERROR (FAIL-CLOSED)` if missing or empty unless `SLOTH_ALLOW_MISSING_BLACKLIST=1` is set). Supports case-insensitive literal lines and `regex:<pattern>` rules.
+1. **Private Blacklist (`${SLOTH_PRIVATE_DIR}/blacklist.txt`)**: Loaded fail-closed (errors explicitly with `CONFIGURATION ERROR (FAIL-CLOSED)` if missing or empty unless `SLOTH_ALLOW_MISSING_BLACKLIST=1` is set). Supports case-insensitive literal lines and `regex:<pattern>` rules across file paths, file contents, Git author/committer headers, and commit messages.
 2. **Forbidden `.env` Files (`FORBIDDEN_ENV_FILE`)**: Blocks committing `.env`, `.env.*`, or `*.env` files (such as `.secrets/sloth.env`, `.secrets/rock5b.env`, `.secrets/pi0-lcn.env`).
-3. **No User Home Paths (`HOME_PATH_LEAK`)**: Blocks hardcoded Linux home-directory paths in file paths, file contents, and commit messages.
+3. **No User Home Paths (`HOME_PATH_LEAK`)**: Blocks hardcoded Linux home-directory paths across file paths, file contents, commit messages, and full Git history.

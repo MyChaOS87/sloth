@@ -458,6 +458,22 @@ scan_git_grep_scope() {
 }
 
 scan_staged() {
+  local ident_tmp="${TMP_WORK}/staged_ident.txt"
+  : > "${ident_tmp}"
+  local a_ident=""
+  local c_ident=""
+  a_ident="$(git -C "${REPO_ROOT}" var GIT_AUTHOR_IDENT 2>/dev/null || true)"
+  c_ident="$(git -C "${REPO_ROOT}" var GIT_COMMITTER_IDENT 2>/dev/null || true)"
+  if [[ -n "${a_ident}" ]]; then
+    printf 'Author: %s\n' "$(printf '%s' "${a_ident}" | sed -E 's/ [0-9]+ [+-][0-9]{4}$//')" >> "${ident_tmp}"
+  fi
+  if [[ -n "${c_ident}" ]]; then
+    printf 'Committer: %s\n' "$(printf '%s' "${c_ident}" | sed -E 's/ [0-9]+ [+-][0-9]{4}$//')" >> "${ident_tmp}"
+  fi
+  if [[ -s "${ident_tmp}" ]]; then
+    scan_text_file "${ident_tmp}" "git-ident" 1 0 "staged:ident"
+  fi
+
   local -a staged_paths=()
   mapfile -d '' -t staged_paths < <(git -C "${REPO_ROOT}" diff --cached --name-only --diff-filter=ACMR -z)
   (( ${#staged_paths[@]} == 0 )) && return 0
@@ -500,7 +516,7 @@ scan_head_tree() {
   local head_sha
   head_sha="$(git -C "${REPO_ROOT}" rev-parse --verify HEAD)"
   local msg_tmp="${TMP_WORK}/head_msg.txt"
-  git -C "${REPO_ROOT}" log -1 --format=%B "${head_sha}" > "${msg_tmp}"
+  git -C "${REPO_ROOT}" log -1 --format='Author: %an <%ae>%nCommitter: %cn <%ce>%n%B' "${head_sha}" > "${msg_tmp}"
   scan_text_file "${msg_tmp}" "HEAD commit ${head_sha:0:7} <msg>" 1 0 "HEAD:${head_sha:0:7}:msg"
 }
 
@@ -521,7 +537,7 @@ scan_working_tree() {
     local head_sha
     head_sha="$(git -C "${REPO_ROOT}" rev-parse --verify HEAD)"
     local msg_tmp="${TMP_WORK}/head_msg.txt"
-    git -C "${REPO_ROOT}" log -1 --format=%B "${head_sha}" > "${msg_tmp}"
+    git -C "${REPO_ROOT}" log -1 --format='Author: %an <%ae>%nCommitter: %cn <%ce>%n%B' "${head_sha}" > "${msg_tmp}"
     scan_text_file "${msg_tmp}" "HEAD commit ${head_sha:0:7} <msg>" 1 0 "HEAD:${head_sha:0:7}:msg"
   fi
 }
@@ -531,7 +547,7 @@ scan_single_commit_outgoing() {
   local short="${sha:0:7}"
 
   local msg_tmp="${TMP_WORK}/commit_msg_${short}.txt"
-  git -C "${REPO_ROOT}" log -1 --format=%B "${sha}" > "${msg_tmp}"
+  git -C "${REPO_ROOT}" log -1 --format='Author: %an <%ae>%nCommitter: %cn <%ce>%n%B' "${sha}" > "${msg_tmp}"
   scan_text_file "${msg_tmp}" "commit ${short} <msg>" 1 0 "commit:${short}:msg"
 
   local -a changed_paths=()
@@ -597,7 +613,7 @@ scan_pre_push() {
 scan_all() {
   scan_working_tree
 
-  # Historical file paths (enforce .env and blacklist rules, skip HOME_PATH_LEAK for already-cleaned history)
+  # Historical file paths, commit headers/messages, and blobs (enforce .env, HOME_PATH_LEAK, and blacklist rules)
   local cur_commit=""
   local line=""
   while IFS= read -r line; do
@@ -607,16 +623,16 @@ scan_all() {
       continue
     fi
     [[ -z "${line}" ]] && continue
-    check_path "${line}" "commit ${cur_commit} " 0 "histpath:${line}"
+    check_path "${line}" "commit ${cur_commit} " 1 "histpath:${line}"
   done < <(git -C "${REPO_ROOT}" log --all --diff-filter=ACMR --name-only --format='<<<COMMIT:%h>>>')
 
-  # Historical commit messages (fast combined pre-filter, exact attribution only on hits)
+  # Historical commit headers and messages (fast combined pre-filter, exact attribution only on hits)
   local all_msgs="${TMP_WORK}/all_commit_msgs.txt"
-  git -C "${REPO_ROOT}" log --all --format='<<<COMMIT:%h>>>%n%B' > "${all_msgs}"
+  git -C "${REPO_ROOT}" log --all --format='<<<COMMIT:%h>>>%nAuthor: %an <%ae>%nCommitter: %cn <%ce>%n%B' > "${all_msgs}"
 
   local msg_hits="${TMP_WORK}/all_msg_hits.txt"
   : > "${msg_hits}"
-  collect_grep_file_hits "${all_msgs}" 0 "${msg_hits}"
+  collect_grep_file_hits "${all_msgs}" 1 "${msg_hits}"
   if [[ -s "${msg_hits}" ]]; then
     local matched_shas_file="${TMP_WORK}/matched_msg_shas.txt"
     awk '
@@ -633,8 +649,8 @@ scan_all() {
     while IFS= read -r msha; do
       [[ -z "${msha}" ]] && continue
       local mtmp="${TMP_WORK}/hist_msg_${msha}.txt"
-      git -C "${REPO_ROOT}" log -1 --format=%B "${msha}" > "${mtmp}"
-      scan_text_file "${mtmp}" "commit ${msha} <msg>" 0 0 "histmsg:${msha}"
+      git -C "${REPO_ROOT}" log -1 --format='Author: %an <%ae>%nCommitter: %cn <%ce>%n%B' "${msha}" > "${mtmp}"
+      scan_text_file "${mtmp}" "commit ${msha} <msg>" 1 0 "histmsg:${msha}"
     done < "${matched_shas_file}"
   fi
 
@@ -646,7 +662,7 @@ scan_all() {
   local chunk_size=400
   while (( offset < total )); do
     local -a chunk=("${all_shas[@]:offset:chunk_size}")
-    scan_git_grep_scope "rev" "commit " 0 "pathline" "${chunk[@]}" --
+    scan_git_grep_scope "rev" "commit " 1 "pathline" "${chunk[@]}" --
     offset=$((offset + chunk_size))
   done
 }

@@ -79,6 +79,15 @@ fmt: checkPrerequisites.go
 check.blacklist:
 	@SLOTH_PRIVATE_DIR="$(SLOTH_PRIVATE_DIR)" ./scripts/check-blacklist.sh --all
 
+.PHONY: check.guard
+check.guard: checkPrerequisites.go
+	@$(call GO_TOOL,gitleaks) git --config .gitleaks.toml --no-banner --redact .
+	@$(call GO_TOOL,gitleaks) git --pre-commit --config .gitleaks.toml --no-banner --redact .
+
+.PHONY: check.guard.staged
+check.guard.staged: checkPrerequisites.go
+	@$(call GO_TOOL,gitleaks) git --staged --config .gitleaks.toml --no-banner --redact .
+
 .PHONY: check.yaml
 check.yaml: checkPrerequisites.go
 	@$(call GO_TOOL,yamlfmt) -dstar -lint '**/*.yaml' '**/*.yml'
@@ -100,7 +109,7 @@ check.images: checkPrerequisites.go checkPrerequisites.helm checkPrerequisites.y
 	@SLOTH_PRIVATE_DIR="$(SLOTH_PRIVATE_DIR)" ./scripts/check-images.sh
 
 .PHONY: check
-check: hooks.install check.blacklist check.yaml check.manifests check.helm
+check: hooks.install check.blacklist check.guard check.yaml check.manifests check.helm
 
 .PHONY: check.commit-msg
 check.commit-msg: checkPrerequisites.go

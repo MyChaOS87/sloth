@@ -1,0 +1,17 @@
+title = "sloth public repository secret guard"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow git/cache dirs, guard config, SealedSecret key-name selectors, and Grafana dashboard panel/query UUID keys"
+regexTarget = "line"
+paths = [
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)\.git(/|$)''',
+  '''(^|/)\.cache(/|$)''',
+]
+regexes = [
+  '''^\s*-\s*key:\s+oidc\.jwk\.RS256\.pem\s*$''',
+  '''"key":\s*"Q-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[0-9]+"''',
+]
