@@ -1,0 +1,38 @@
+config: |-
+  ---
+  mqtt:
+    broker: tcp://mosquitto.mosquitto.svc.cluster.local:1883
+
+  automate:
+    lcn/segment/0/target/4/:
+      - match:
+          $yaml: |
+            Src: 34
+            Cmd: 104
+            Payload: "MAQ="
+        actions:
+          - topic: shellyplug-lamp/command/switch:0
+            content:
+              $plain: on
+          - topic: shellyplug-heater/command/switch:0
+            content:
+              $plain: on
+      - match:
+          $yaml: |
+            Src: 34
+            Cmd: 104
+            Payload: "MAA="
+        actions:
+          - topic: shellyplug-lamp/command/switch:0
+            content:
+              $plain: off
+          - topic: shellyplug-heater/command/switch:0
+            content:
+              $plain: off
+
+  logger:
+    development: false
+    disableCaller: false
+    disableStacktrace: false
+    encoding: json
+    level: info

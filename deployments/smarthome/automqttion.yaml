@@ -10,13 +10,18 @@ spec:
   project: smarthome
   sources:
     - repoURL: https://mychaos87.github.io/automqttion
-      targetRevision: 0.0.6
+      targetRevision: 0.0.7
       chart: automqttion
       helm:
+        valueFiles:
+          - $private/values/automqttion.yaml
         values: |
           env:
             - name: AUTOMQTTION_MQTT_BROKER
               value: "tcp://mosquitto.mosquitto.svc.cluster.local:1883"
+    - repoURL: git@github.com:MyChaOS87/sloth-private.git
+      targetRevision: main
+      ref: private
   syncPolicy:
     automated:
       prune: true
