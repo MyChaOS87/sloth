@@ -47,7 +47,7 @@ flowchart TD
         VictoriaMetrics["victoria-metrics (0.50.0)<br/>ns: victoria-metrics"]
         Grafana["grafana (10.5.15) + dashboards<br/>ns: grafana"]
         Automqttion["automqttion (0.0.6)<br/>ns: automqttion"]
-        ReverseLCN["reverselcn (0.0.4)<br/>ns: reverselcn"]
+        ReverseLCN["reverselcn (0.0.5)<br/>ns: reverselcn"]
     end
 
     RootEssentials --> SealedSecrets
@@ -179,7 +179,7 @@ flowchart LR
     end
 
     subgraph EdgeBridge["Edge Serial DaemonSet (ns: reverselcn on pi0-lcn)"]
-        RLCN["reverseLCN 0.0.4<br/>(lcn/segment/# & lcn/in)"]
+        RLCN["reverseLCN 0.0.5<br/>(lcn/segment/# & lcn/in)"]
     end
 
     subgraph Broker["MQTT Broker (ns: mosquitto)"]
