@@ -10,7 +10,7 @@ spec:
   project: smarthome
   sources:
     - repoURL: https://mychaos87.github.io/automqttion
-      targetRevision: 0.0.7
+      targetRevision: 0.1.0
       chart: automqttion
       helm:
         valueFiles:
