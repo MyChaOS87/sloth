@@ -105,7 +105,7 @@ sequenceDiagram
     MetalLB-->>Traefik: Assign 192.168.1.50 (metallb-auto-pool)
     MetalLB-->>App: Assign 192.168.1.30 to Mosquitto (metallb-reserved-pool)
     App->>ExtDNS: Expose hostname (*.rock.k8s.example.com)
-    ExtDNS->>GCP: Sync A record -> 192.168.1.x & TXT owner record (txtOwnerId=k8s)
+    ExtDNS->>GCP: Sync A record -> 192.168.1.x & TXT owner record (txtOwnerId=default)
     App->>CertMgr: Annotation cert-manager.io/cluster-issuer: letsencrypt
     CertMgr->>GCP: Present _acme-challenge TXT record (DNS-01 solver)
     CertMgr->>LE: Verify DNS-01 challenge & issue X.509 Certificate
@@ -160,8 +160,8 @@ Longhorn (`v1.13.0`) provides replicated block storage across the 3 NVMe-backed 
 - **Persistent Volume Consumers**:
   1. **VictoriaMetrics (`victoria-metrics`)**: 16 GiB PVC (`storageClassName: longhorn`, `retentionPeriod: 100y`) storing columnar time-series blocks in `victoria-metrics`.
   2. **Prometheus (`prometheus-server` & `storage-prometheus-alertmanager-0`)**: 100 GiB + 2 GiB Longhorn PVCs storing cluster metrics and alert state in `prometheus`.
-  3. **Grafana (`grafana`)**: 10 GiB PVC (`storageClassName: longhorn`) storing Grafana SQLite state and plugin data in `grafana`.
-  4. **Authelia (`authelia`)**: 1 GiB PVC (`storageClassName: longhorn`) storing SQLite state (`/config/db.sqlite3`: WebAuthn credentials, TOTP secrets, OIDC consent sessions) in `oidc`.
+  3. **Authelia (`authelia`)**: 1 GiB PVC (`storageClassName: longhorn`) storing SQLite state (`/config/db.sqlite3`: WebAuthn credentials, TOTP secrets, OIDC consent sessions) in `oidc`.
+  *(Note: **Grafana (`grafana`)** intentionally runs statelessly on `emptyDir` rather than a Longhorn PVC because all dashboards, datasources, and OIDC RBAC roles are reconciled declaratively via GitOps and Authelia SSO, preserving zero-downtime `RollingUpdate` scheduling without `ReadWriteOnce` volume locks.)*
 
 ---
 

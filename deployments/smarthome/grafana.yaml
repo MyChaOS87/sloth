@@ -22,8 +22,12 @@ spec:
               cert-manager.io/cluster-issuer: letsencrypt
           admin:
             existingSecret: grafana-secret
+          # Intentionally stateless (emptyDir): all dashboards, datasources, and Authelia OIDC roles
+          # are reconciled declaratively via GitOps/SSO, preserving RollingUpdate scheduling without RWO locks.
+          persistence:
+            enabled: false
           datasources:
-            datatasources.yaml:
+            datasources.yaml:
               apiVersion: 1
               datasources:
               - name: VictoriaMetrics

@@ -1,3 +1,4 @@
 extraArgs:
   - --google-project=example-dns
+  - --domain-filter=example.com
   - --enable-legacy-annotation-prefix

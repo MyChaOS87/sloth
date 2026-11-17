@@ -29,7 +29,7 @@ spec:
           enabled: false
         config:
           agent:
-            debug: true
+            debug: false
             omit_hostname: true
             metric_buffer_limit: 100000
           processors:

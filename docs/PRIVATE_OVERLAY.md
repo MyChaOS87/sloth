@@ -33,7 +33,7 @@ sloth-private/
 │   ├── argocd.yaml                                               # configs.cm.{url,oidc.config}, server.ingress.{hostname,extraHosts,extraTls}
 │   ├── authelia.yaml                                             # ingress.rulesOverride, configMap.{session,notifier,access_control,identity_providers.oidc}
 │   ├── automqttion.yaml                                          # config (declarative MQTT automation rules)
-│   ├── external-dns.yaml                                         # extraArgs (--google-project=..., --enable-legacy-annotation-prefix)
+│   ├── external-dns.yaml                                         # extraArgs (--google-project=..., --domain-filter=..., --enable-legacy-annotation-prefix)
 │   ├── grafana.yaml                                              # ingress.{hosts,tls}, grafana.ini.{server,auth.generic_oauth URLs}
 │   ├── longhorn.yaml                                             # ingress.{host,tlsSecret}
 │   ├── mosquitto.yaml                                            # service.annotations (external-dns hostnames)
