@@ -144,7 +144,7 @@ sequenceDiagram
   - Applying a `v1/Node` manifest via `ServerSideApply=true` before a physical node has joined creates a bare `NotReady` node in Kubernetes and bypasses kubelet's initial cloud-provider registration taint. Only nodes that have already joined the cluster are declared in [`nodes/`](../nodes/), and each `v1/Node` manifest carries `argocd.argoproj.io/sync-options: Prune=false,Delete=false` so even a cascade delete of the `nodes` Application can never delete a live node.
 - **Rolling K3s & Immutable Kairos Upgrades ([`cluster-essentials/system-upgrade-config/`](../cluster-essentials/system-upgrade-config/) & [`cluster-essentials/kairos-operator-config/`](../cluster-essentials/kairos-operator-config/))**:
   - [`kairos-os.yaml`](../cluster-essentials/kairos-operator-config/kairos-os.yaml): `NodeOpUpgrade` (`kairos-operator`) performs rolling A/B OCI image upgrades (`concurrency: 1`, `stopOnFailure: true`) on nodes labeled `kairos.io/managed: "true"`.
-  - [`k3s.yaml`](../cluster-essentials/system-upgrade-config/k3s.yaml): `server-plan` and `agent-plan` upgrade non-Kairos nodes (`kairos.io/managed: DoesNotExist`, such as `pi0-lcn`) to the pinned K3s version (`v1.37.2+k3s1`).
+  - [`k3s.yaml`](../cluster-essentials/system-upgrade-config/k3s.yaml): `agent-plan` upgrades non-Kairos agent nodes (`kairos.io/managed: DoesNotExist`, such as `pi0-lcn`) to the pinned K3s version (`v1.37.2+k3s1`, parity-checked against `kairos-os.yaml` by [`policy/upgrades.rego`](../policy/upgrades.rego)).
 
 ---
 

@@ -1,34 +1,17 @@
-apiVersion: upgrade.cattle.io/v1
-kind: Plan
-metadata:
-  name: server-plan
-  namespace: system-upgrade
-spec:
-  concurrency: 1
-  cordon: true
-  nodeSelector:
-    matchExpressions:
-      - key: node-role.kubernetes.io/control-plane
-        operator: In
-        values:
-          - "true"
-      # Kairos-managed nodes are upgraded atomically via kairos-operator
-      - key: kairos.io/managed
-        operator: DoesNotExist
-  serviceAccountName: system-upgrade
-  upgrade:
-    image: rancher/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/stable
----
-# Agent plan
+# Agent plan for non-Kairos edge nodes (pi0-lcn).
+# Keep version in lockstep with cluster-essentials/kairos-operator-config/kairos-os.yaml (enforced by policy/upgrades.rego).
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
   name: agent-plan
   namespace: system-upgrade
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   concurrency: 1
   cordon: true
+  version: v1.37.2+k3s1
   nodeSelector:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane
@@ -38,12 +21,6 @@ spec:
   tolerations:
     - key: dedicated
       operator: Exists
-  prepare:
-    args:
-      - prepare
-      - server-plan
-    image: rancher/k3s-upgrade
   serviceAccountName: system-upgrade
   upgrade:
     image: rancher/k3s-upgrade
-  channel: https://update.k3s.io/v1-release/channels/stable

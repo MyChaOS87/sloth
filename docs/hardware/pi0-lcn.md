@@ -30,7 +30,7 @@ With all 5 layers active in production (`reverselcn` + `prometheus-node-exporter
 ## 2. Unprivileged USB Serial Access (`/dev/lcn-pku`)
 
 Rather than running `reverselcn` with `privileged: true`, [`node-bootstrap/pi0-lcn/playbook.yml`](../../node-bootstrap/pi0-lcn/playbook.yml) configures two host-level rules so `reverselcn` runs completely unprivileged (`runAsNonRoot: true`, `runAsUser: 10001`, `supplementalGroups: [20]`, `capabilities.drop: ["ALL"]`):
-1. **Deterministic udev symlink** ([`99-lcn-pku.rules`](../../node-bootstrap/pi0-lcn/99-lcn-pku.rules)): Matches FTDI (`0403:6001`) or `/dev/ttyUSB*` / `/dev/ttyACM*` and creates `/dev/lcn-pku` owned by `root:dialout` (`0660`, group ID `20`).
+1. **Deterministic udev device node** ([`99-lcn-pku.rules`](../../node-bootstrap/pi0-lcn/99-lcn-pku.rules)): Matches the FTDI (`0403:6001`) USB serial coupler and creates `/dev/lcn-pku` owned by `root:dialout` (`0660`, group ID `20`).
 2. **Containerd v3 OCI base spec device whitelist**: Adds character device majors `188` (`ttyUSB*`) and `166` (`ttyACM*`) (`rwm`) to `/etc/containerd/cri-base.json` and wires it via `/var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.d/10-serial.toml` so Linux cgroups v2 permits the unprivileged container to open `/dev/lcn-pku`.
 
 ---
