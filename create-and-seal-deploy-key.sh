@@ -1,13 +1,33 @@
 #!/bin/bash
-set -e +x
+set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "${REPO_ROOT}"
 
+# shellcheck source=.check.lib.sh
 source "${REPO_ROOT}/.check.lib.sh"
 
 check_programs_available kubeseal ssh-keygen kubectl
 load_sloth_env "${REPO_ROOT}"
+
+derive_repo_secret_name() {
+  local url="${1#*://}"
+  url="${url#*@}"
+  url="${url/://}"
+  url="${url%.git}"
+  local host="${url%%/*}"
+  local path="${url#*/}"
+  local reversed_host="" seg=""
+  local -a host_parts=()
+  IFS='.' read -r -a host_parts <<< "${host}"
+  for (( i=${#host_parts[@]}-1; i>=0; i-- )); do
+    seg="${host_parts[$i]}"
+    reversed_host+="${reversed_host:+.}${seg}"
+  done
+  printf 'repo.%s.%s\n' "${reversed_host}" "${path//\//.}" | tr '[:upper:]' '[:lower:]'
+}
+
+PRIVATE_REPO_SECRET_NAME="${PRIVATE_REPO_SECRET_NAME:-$(derive_repo_secret_name "${PRIVATE_REPO_URL}")}"
 
 SEALED_OUT="${SLOTH_PRIVATE_DIR}/argocd-base/repository-private.sealed.json"
 PUB_OUT="${SLOTH_PRIVATE_DIR}/deploy_key.pub"
@@ -16,18 +36,22 @@ assert_no_overwrite "${SEALED_OUT}"
 ensure_parent_dir "${SEALED_OUT}"
 ensure_parent_dir "${PUB_OUT}"
 
-mkdir -p .secrets/.ssh/
-chmod 700 .secrets/.ssh/
+mkdir -p "${REPO_ROOT}/.secrets"
+chmod 700 "${REPO_ROOT}/.secrets"
+tmp_dir="$(mktemp -d "${REPO_ROOT}/.secrets/deploy-key.XXXXXX")"
+chmod 700 "${tmp_dir}"
+tmp_sealed="$(mktemp)"
+trap 'rm -rf "${tmp_dir}" "${tmp_sealed}"' EXIT
 
-echo Creating new SSH Keypair ... 1>&2
-ssh-keygen -q -t ed25519 -N '' -f .secrets/.ssh/id_ed25519 -C "argocd@$(kubectl config current-context)"
+echo "Creating new SSH Keypair ..." >&2
+ssh-keygen -q -t ed25519 -N '' -f "${tmp_dir}/id_ed25519" -C "argocd@$(kubectl config current-context)"
 
-echo Sealing Private key into secret ... 1>&2
-kubeseal --controller-namespace sealed-secrets > "${SEALED_OUT}" << EOF
+echo "Sealing Private key into secret (${PRIVATE_REPO_SECRET_NAME}) ..." >&2
+kubeseal --controller-namespace sealed-secrets > "${tmp_sealed}" << EOF
 apiVersion: v1
 kind: Secret
 metadata:
-  name: repo.com.github.mychaos87.sloth-private
+  name: ${PRIVATE_REPO_SECRET_NAME}
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: repository
@@ -35,15 +59,12 @@ stringData:
   type: git
   url: ${PRIVATE_REPO_URL}
   sshPrivateKey: |
-$(cat .secrets/.ssh/id_ed25519 | sed 's/^/    /')
+$(sed 's/^/    /' "${tmp_dir}/id_ed25519")
 EOF
 
-echo "Storing Public Key as \"${PUB_OUT}\" ..." 1>&2
-mv .secrets/.ssh/id_ed25519.pub "${PUB_OUT}"
+mv "${tmp_sealed}" "${SEALED_OUT}"
+echo "Storing Public Key as \"${PUB_OUT}\" ..." >&2
+mv "${tmp_dir}/id_ed25519.pub" "${PUB_OUT}"
 
-echo Cleanup Temporary Files 1>&2
-rm .secrets/.ssh/id_ed25519
-rmdir .secrets/.ssh/
-
-echo "Your Public Deploy Key is (add as a read-only deploy key on ${PRIVATE_REPO_URL}):" 1>&2
+echo "Your Public Deploy Key is (add as a read-only deploy key on ${PRIVATE_REPO_URL}):" >&2
 cat "${PUB_OUT}"

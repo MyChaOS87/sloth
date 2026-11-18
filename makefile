@@ -137,12 +137,12 @@ sealed-secrets.uninstall: checkPrerequisites.helm
 
 .PHONY: argocd.install
 argocd.install: checkPrerequisites.helm checkPrerequisites.yq
-	helm repo add argo https://argoproj.github.io/argo-helm
-	yq -r ". | select(.kind == \"Application\") | .spec.sources[0].helm.values" argocd-base/argocd.yaml > .argocd.values.yaml
-	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f $(SLOTH_PRIVATE_DIR)/values/argocd.yaml -f .argocd.values.yaml argo/argo-cd
+	trap 'rm -f .argocd.values.yaml' EXIT; \
+	helm repo add --force-update argo https://argoproj.github.io/argo-helm && \
+	yq -r ". | select(.kind == \"Application\") | .spec.sources[0].helm.values" argocd-base/argocd.yaml > .argocd.values.yaml && \
+	helm install argocd --namespace argocd --create-namespace --version $(ARGOCDVERSION) -f $(SLOTH_PRIVATE_DIR)/values/argocd.yaml -f .argocd.values.yaml argo/argo-cd && \
+	kubectl apply -f $(SLOTH_PRIVATE_DIR)/argocd-base/repository-private.sealed.json && \
 	kubectl apply -f argocd-base/argocd-base.yaml
-	kubectl apply -f $(SLOTH_PRIVATE_DIR)/argocd-base/repository-private.sealed.json
-	rm .argocd.values.yaml
 
 .PHONY: argocd.password
 argocd.password: checkPrerequisites.kubectl
@@ -154,7 +154,7 @@ argocd.port-forward: checkPrerequisites.kubectl
 
 .PHONY: argocd.uninstall
 argocd.uninstall: checkPrerequisites.helm
-	helm uninstall argocd-base --namespace argocd
+	kubectl delete -f argocd-base/argocd-base.yaml --ignore-not-found
 	helm uninstall argocd --namespace argocd
 	kubectl delete ns argocd
 	kubectl delete CustomResourceDefinition applications.argoproj.io applicationsets.argoproj.io appprojects.argoproj.io

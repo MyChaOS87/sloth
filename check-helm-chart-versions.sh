@@ -1,53 +1,66 @@
 #!/bin/bash
+set -euo pipefail
 
-source .check.lib.sh
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=.check.lib.sh
+source "${REPO_ROOT}/.check.lib.sh"
 check_programs_available kubectl jq helm awk
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-function versioncheck() {
-    local app=$1
-    local chart=$2
-    local repoURL=$3
-    local version=$4
+cleanup_temp_repo() {
+  helm repo remove temp-repo >/dev/null 2>&1 || true
+}
+trap cleanup_temp_repo EXIT
 
-    local latestVersion=""
-    if [[ "$repoURL" == http://* || "$repoURL" == https://* ]]; then
-        # Add the repository if it is not already added
-        helm repo add temp-repo "$repoURL" > /dev/null 2>&1
-        helm repo update > /dev/null 2>&1
+versioncheck() {
+  local app="$1"
+  local chart="$2"
+  local repo_url="$3"
+  local version="$4"
 
-        # Get the latest version of the chart
-        local latestInfo
-        latestInfo=$(helm search repo temp-repo/"$chart" | awk 'NR==2 {print $1, $2}')
-        latestVersion=$(echo "$latestInfo" | awk '{print $2}')
+  local latest_version=""
+  if [[ "${repo_url}" == http://* || "${repo_url}" == https://* ]]; then
+    helm repo add --force-update temp-repo "${repo_url}" >/dev/null 2>&1
+    helm repo update temp-repo >/dev/null 2>&1
+    latest_version="$(
+      helm search repo "temp-repo/${chart}" -o json |
+        jq -r --arg n "temp-repo/${chart}" 'map(select(.name == $n))[0].version // empty'
+    )"
+    helm repo remove temp-repo >/dev/null 2>&1 || true
+  else
+    local oci_base="${repo_url#oci://}"
+    latest_version="$(
+      helm show chart "oci://${oci_base%/}/${chart}" 2>/dev/null |
+        awk '/^version:[[:space:]]*/ {print $2; exit}' || true
+    )"
+  fi
 
-        # Remove the temporary repository
-        helm repo remove temp-repo > /dev/null 2>&1
-    else
-        latestVersion=$(helm show chart "oci://${repoURL}/${chart}" 2>/dev/null | awk '/^version:/ {print $2}')
-    fi
+  local norm_latest="${latest_version#v}"
+  local norm_version="${version#v}"
 
-    # Remove leading 'v' if it exists
-    latestVersion=${latestVersion#v}
-
-    if [[ "${latestVersion#v}" != "$version" ]]; then
-        echo -e "${RED}Outdated${NC}: $app ($repoURL $chart): ${RED}$version${NC} [$latestVersion]"
-    else
-        echo -e "${GREEN}OK${NC}: $app ($repoURL $chart): ${GREEN}$version${NC}"
-    fi
+  if [[ -z "${norm_latest}" ]]; then
+    echo -e "${RED}Error${NC}: ${app} (${repo_url} ${chart}): ${RED}${version}${NC} [lookup failed]"
+  elif [[ "${norm_latest}" != "${norm_version}" ]]; then
+    echo -e "${RED}Outdated${NC}: ${app} (${repo_url} ${chart}): ${RED}${version}${NC} [${latest_version}]"
+  else
+    echo -e "${GREEN}OK${NC}: ${app} (${repo_url} ${chart}): ${GREEN}${version}${NC}"
+  fi
 }
 
-export -f versioncheck
+apps_json="$(kubectl get -n argocd applications.argoproj.io -o json)"
 
-kubectl get -n argocd applications.argoproj.io -o json | \
-    jq '.items.[] ' |
-    jq '{name: .metadata.name, source: ([.spec.source] + .spec.sources).[] | {chart: .chart, repoURL: .repoURL, version: .targetRevision } }' |
-    jq 'select(.source.chart != null)' |
-    jq -r '"\(.name) \(.source.chart) \(.source.repoURL) \(.source.version)"' |
-
-    while read -r app chart repoURL version; do
-        versioncheck "$app" "$chart" "$repoURL" "$version"
-    done
+while IFS=$'\t' read -r app chart repo_url version; do
+  versioncheck "${app}" "${chart}" "${repo_url}" "${version}"
+done < <(
+  jq -r '
+    .items[] |
+    .metadata.name as $name |
+    ((if .spec.source then [.spec.source] else [] end) + (.spec.sources // []))[] |
+    select(.chart != null) |
+    [$name, .chart, .repoURL, .targetRevision] |
+    @tsv
+  ' <<< "${apps_json}"
+)
