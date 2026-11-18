@@ -41,12 +41,12 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 | `make check.images` | Opt-in online check ([`scripts/check-images.sh`](../scripts/check-images.sh)) inspecting rendered container images via `crane config --platform linux/arm64` (excluded from `make check` and Git hooks). |
 | `make check` | Full pre-push validation gate: installs hooks, then runs `check.blacklist`, `check.guard`, `check.yaml`, `check.manifests`, and `check.helm`. |
 | `make check.commit-msg` | Standalone conventional commit format check ([`.commitlint.yaml`](../.commitlint.yaml) via `commitlint`; pass `COMMIT_MSG_FILE=...` to check a specific message file, otherwise inspects `HEAD`; excluded from `make check`). |
-| `make sealed-secrets.install` | Add `https://bitnami.github.io/sealed-secrets` and install the `sealed-secrets` chart into `kube-system` using the exact version declared in [`cluster-essentials/sealed-secrets.yaml`](../cluster-essentials/sealed-secrets.yaml). |
+| `make sealed-secrets.install` | Add `https://bitnami.github.io/sealed-secrets` and install the `sealed-secrets` chart into `sealed-secrets` using the exact version declared in [`cluster-essentials/sealed-secrets.yaml`](../cluster-essentials/sealed-secrets.yaml). |
 | `make sealed-secrets.seal.sshDeployKey` | Execute `./create-and-seal-deploy-key.sh` to generate and seal the GitHub SSH deploy key for Argo CD. |
-| `make sealed-secrets.uninstall` | Uninstall `sealed-secrets` from `kube-system`. |
-| `make argocd.install` | Extract `targetRevision` and inline `values` from `.spec.sources[0]` of [`argocd-base/argocd.yaml`](../argocd-base/argocd.yaml), install `argo-cd` via Helm alongside `$(SLOTH_PRIVATE_DIR)/values/argocd.yaml`, and apply [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) + `$(SLOTH_PRIVATE_DIR)/argocd-base/repository-private.sealed.json`. |
+| `make sealed-secrets.uninstall` | Uninstall `sealed-secrets` from `sealed-secrets`. |
+| `make argocd.install` | Extract `targetRevision` and inline `values` from `.spec.sources[0]` of [`argocd-base/argocd.yaml`](../argocd-base/argocd.yaml) (cleaning temporary `.argocd.values.yaml` via `EXIT` trap), install `argo-cd` via Helm alongside `$(SLOTH_PRIVATE_DIR)/values/argocd.yaml`, and apply `$(SLOTH_PRIVATE_DIR)/argocd-base/repository-private.sealed.json` before [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml). |
 | `make argocd.password` | Decode and print the initial `argocd-initial-admin-secret` password from namespace `argocd`. |
-| `make argocd.port-forward` | Port-forward `svc/argocd-server` in `argocd` to `https://localhost:8080`. |
+| `make argocd.port-forward` | Port-forward `svc/argocd-server` in `argocd` to `http://localhost:8080`. |
 | `make argocd.uninstall` | Delete Argo CD Applications, AppProjects, Helm release, and `*.argoproj.io` CRDs. |
 
 ---
@@ -59,13 +59,13 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 | Script | Generated Plaintext (`.secrets/`) | Sealed Output Written to `${SLOTH_PRIVATE_DIR}` | External Manual Step Required? |
 |--------|-----------------------------------|-------------------------------------------------|--------------------------------|
 | [`create-and-seal-deploy-key.sh`](../create-and-seal-deploy-key.sh) | Temporary `ed25519` keypair | `argocd-base/repository-private.sealed.json`<br/>`deploy_key.pub` | **Yes**: Add `${SLOTH_PRIVATE_DIR}/deploy_key.pub` as a read-only Deploy Key on your private overlay GitHub repo. |
-| [`create-and-seal-gcloud-service-accounts.sh`](../create-and-seal-gcloud-service-accounts.sh) | `.secrets/gcloud-dns01-solver.key.json` & `.secrets/gcloud-external-dns.key.json` | `cluster-essentials/cert-manager-config/gcloud-dns01-solver.sealed.json`<br/>`cluster-essentials/external-dns-config/gcloud-external-dns.sealed.json` | **Yes**: Creates GCP IAM service account keys in `GCP_PROJECT` (from `.secrets/sloth.env` or prompt, e.g. `example-dns`) via `gcloud`. |
+| [`create-and-seal-gcloud-service-accounts.sh`](../create-and-seal-gcloud-service-accounts.sh) | Temporary `.secrets/gcloud-*.key.json` & `.json` (cleaned up on exit) | `cluster-essentials/cert-manager-config/gcloud-dns01-solver.sealed.json`<br/>`cluster-essentials/external-dns-config/gcloud-external-dns.sealed.json` | **Yes**: Creates GCP IAM service account keys in `GCP_PROJECT` (from `.secrets/sloth.env` or prompt, e.g. `example-dns`) via `gcloud`. |
 | [`create-and-seal-metallb-memberlist-secret.sh`](../create-and-seal-metallb-memberlist-secret.sh) | Generated inline (`openssl rand`) | `cluster-essentials/metallb-config/memberlist.sealed.json` | No. |
 | [`create-and-seal-authelia-secrets.sh`](../create-and-seal-authelia-secrets.sh) | Generated inline (`openssl`) | `deployments/oidc/authelia-secrets/authelia-secret.sealed.json`<br/>`deployments/oidc/authelia-secrets/authelia-jwks-secret.sealed.json` | No (4 HMAC/encryption keys + 4096-bit RSA OIDC JWKS key). |
 | [`create-and-seal-authelia-smtp-secret.sh`](../create-and-seal-authelia-smtp-secret.sh) | Interactive password prompt | `deployments/oidc/authelia-secrets/authelia-smtp-secret.sealed.json` | **Yes**: Enter outbound SMTP password for Authelia notification emails. |
 | [`create-and-seal-oidc-client-secrets.sh`](../create-and-seal-oidc-client-secrets.sh) | Interactive or `openssl rand` | `argocd-base/argocd-secrets/argocd-oidc-client-secret.sealed.json`<br/>`deployments/smarthome/grafana-secrets/grafana-oidc-client-secret.sealed.json` | **Yes**: Paste the printed `$pbkdf2-sha512$...` digests into `${SLOTH_PRIVATE_DIR}/values/authelia.yaml`. |
 | [`create-authelia-user-hash.sh`](../create-authelia-user-hash.sh) | Interactive password prompt (not sealed; printed to stdout) | None (operator copies `$argon2id$...` into `${SLOTH_PRIVATE_DIR}/deployments/oidc/authelia-config/users-secret.yaml`) | **Yes**: Paste user hash into `users-secret.yaml`. |
-| [`create-and-seal-smarthome-secrets.sh`](../create-and-seal-smarthome-secrets.sh) | Generated inline (`pwgen`) | `deployments/smarthome/grafana-secrets/grafana-secret.sealed.json` | No. |
+| [`create-and-seal-smarthome-secrets.sh`](../create-and-seal-smarthome-secrets.sh) | Generated inline (`openssl rand`) | `deployments/smarthome/grafana-secrets/grafana-secret.sealed.json` | No. |
 
 ---
 
@@ -82,16 +82,16 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 
 ## 5. Version Audit Script (`check-helm-chart-versions.sh`)
 
-[`check-helm-chart-versions.sh`](../check-helm-chart-versions.sh) scans all Argo CD `Application` YAML manifests across `argocd-base/`, `cluster-essentials/`, and `deployments/` and compares their `targetRevision` against upstream Helm repositories and GitHub Releases:
+[`check-helm-chart-versions.sh`](../check-helm-chart-versions.sh) queries live Argo CD `Application` resources in namespace `argocd` via `kubectl` and compares each deployed Helm chart's `targetRevision` against upstream repositories:
 
 ```bash
 ./check-helm-chart-versions.sh
 ```
 
 - **What it checks**:
-  1. All external Helm charts (`spec.source.chart` and `spec.sources[].chart`), outputting `Current` vs `Latest` chart version and `AppVersion`.
-  2. Local Helm charts (`deployments/smarthome/mosquitto/Chart.yaml`).
-  3. Non-Helm GitHub releases (`rancher/system-upgrade-controller` tag in `cluster-essentials/system-upgrade.yaml`).
+  1. HTTP(S) Helm chart references (`spec.source.chart` and `spec.sources[].chart`), queried via `helm repo add --force-update temp-repo ...` and `helm search repo -o json`.
+  2. OCI Helm chart references, queried via `helm show chart oci://...`.
+  3. Prints `OK` or `Outdated` while normalizing leading `v` prefixes on both versions (for example `cert-manager` `v1.21.3`). For per-image ARM64 checks, use `make check.images`.
 
 ---
 

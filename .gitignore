@@ -1,5 +1,6 @@
 .cache/**
-.secrets/**
+.secrets/*
+!.secrets/README.md
 node-bootstrap/rock5b/build/**
 
 .vscode

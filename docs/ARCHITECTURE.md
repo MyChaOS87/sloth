@@ -19,7 +19,7 @@ flowchart TD
     end
 
     subgraph Tier1["Tier 1: Cluster Essentials (cluster-essentials/)"]
-        SealedSecrets["sealed-secrets (2.22.0)<br/>ns: kube-system"]
+        SealedSecrets["sealed-secrets (2.22.0)<br/>ns: sealed-secrets"]
         KubeVIP["kube-vip (0.11.2)<br/>ns: kube-system | VIP: 192.168.1.20"]
         MetalLB["metallb (0.16.2) + metallb-config<br/>ns: metallb"]
         Traefik["traefik (42.3.1) + dashboard<br/>ns: traefik"]
@@ -42,7 +42,7 @@ flowchart TD
     end
 
     subgraph Tier3_SH["Smarthome Stack (deployments/smarthome/)"]
-        Mosquitto["mosquitto (local chart 2.1.2)<br/>ns: mosquitto"]
+        Mosquitto["mosquitto (local chart 2.1.3)<br/>ns: mosquitto"]
         Telegraf["telegraf (1.8.78, 2 replicas)<br/>ns: telegraf"]
         VictoriaMetrics["victoria-metrics (0.50.0)<br/>ns: victoria-metrics"]
         Grafana["grafana (10.5.15) + dashboards<br/>ns: grafana"]
@@ -77,11 +77,11 @@ flowchart TD
 
 | `AppProject` | Manifest | Permitted Source Repos | Target Namespaces |
 |--------------|----------|------------------------|-------------------|
-| `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `*` | `argocd` |
+| `argocd-base` | [`argocd-base/argocd-base.yaml`](../argocd-base/argocd-base.yaml) | `https://github.com/MyChaOS87/sloth.git`, `git@github.com:MyChaOS87/sloth-private.git`, `https://argoproj.github.io/argo-helm` | `argocd` (+ cluster `Namespace`, `CRD`, `ClusterRole`, `ClusterRoleBinding`) |
 | `nodes` | [`argocd-base/nodes.yaml`](../argocd-base/nodes.yaml) | `https://github.com/MyChaOS87/sloth.git` | Cluster-scoped `v1/Node` only (`namespaceResourceBlacklist: */*`, no orphan watch) |
 | `cluster-essentials` | [`cluster-essentials/cluster-essentials.yaml`](../cluster-essentials/cluster-essentials.yaml) | `*` | `*` (cluster-wide infrastructure & CRDs) |
-| `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `*` | `oidc` (`authelia`) |
-| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `*` | `*` (`mosquitto`, `telegraf`, `victoria-metrics`, `grafana`, `automqttion`, `reverselcn`) |
+| `oidc` | [`deployments/oidc/oidc.yaml`](../deployments/oidc/oidc.yaml) | `https://charts.authelia.com`, `git@github.com:MyChaOS87/sloth-private.git` | `oidc` (`authelia`, no cluster-scoped resources) |
+| `smarthome` | [`deployments/smarthome/smarthome.yaml`](../deployments/smarthome/smarthome.yaml) | `sloth`, `sloth-private`, `grafana`, `influxdata`, `victoriametrics`, `automqttion`, `reverseLCN` | `grafana`, `victoria-metrics`, `mosquitto`, `telegraf`, `automqttion`, `reverselcn` (+ `ClusterRole`, `ClusterRoleBinding` for Grafana sidecar) |
 | `private` | `sloth-private/private/private.yaml` | `*` | `*` (private workloads & experiments isolated from `sloth`) |
 
 ---
@@ -126,6 +126,11 @@ sequenceDiagram
 | **Grafana** | `grafana.rock.k8s.example.com`, `grafana.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia OIDC |
 | **VictoriaMetrics UI/API** | `victoria.rock.k8s.example.com`, `victoria.internal.k8s.example.com` | Traefik `Ingress` | Let's Encrypt TLS + Authelia ForwardAuth |
 | **Mosquitto MQTT** | `192.168.1.30:1883` (`mosquitto.rock.k8s.example.com`, `mosquitto.internal.k8s.example.com`) | MetalLB `LoadBalancer` (`metallb-reserved-pool`) | TCP `:1883` |
+
+### Network & Ingress Trust Boundaries
+
+* **LAN-Local MQTT (`192.168.1.30:1883`)**: Mosquitto runs unauthenticated (`allow_anonymous true`) on the isolated RFC 1918 residential LAN (`192.168.1.0/24`, never port-forwarded to the public internet) so embedded Shelly, WARP2, and `reverseLCN` clients publish directly without credential management overhead; the container runtime itself runs unprivileged (`UID/GID 1883`, `readOnlyRootFilesystem: true`, `capabilities.drop: ["ALL"]`, `automountServiceAccountToken: false`).
+* **Traefik Cross-Namespace CRD References (`allowCrossNamespace: true`)**: Enabled intentionally in [`cluster-essentials/traefik.yaml`](../cluster-essentials/traefik.yaml) so `Ingress` resources across `longhorn`, `prometheus`, and `victoria-metrics` can reference the centralized `oidc-chain-authelia-auth@kubernetescrd` ForwardAuth `Middleware` deployed in namespace `oidc`.
 
 ---
 
@@ -211,10 +216,12 @@ flowchart LR
 
 ### Telegraf Measurement Schema
 
-| Measurement | Input Plugin | Key Tags | Key Fields |
-|-------------|--------------|----------|------------|
-| `shellies` | `inputs.mqtt_consumer` (`shellies/#`) | `device_type`, `device_id`, `channel` | `power` (W), `energy` (Wmin), `temperature` (°C), `overtemperature` |
-| `shellies_plug` | `inputs.mqtt_consumer` (`shellies_plug/#`) | `device_type`, `device_id`, `channel` | `apower` (W), `voltage` (V), `current` (A), `temperature_tC` (°C), `aenergy_total` |
-| `shellies_blu` | `inputs.mqtt_consumer` (`shellies_blu/BLE/ht/#`) | `device` | `temperature` (°C), `humidity` (%RH), `illuminance` (lx), `battery` (%) |
-| `wallbox` | `inputs.mqtt_consumer` (`warp2/22hg/#`) | `id`, `type`, `subtype` | `power` (W), `energy_abs` (kWh), `energy_rel` (kWh), `current_L1..L3`, `voltage_L1..L3` |
-| `pluggit_modbus` | `inputs.modbus` (`tcp://192.168.1.19:502`) | `name`, `type`, `slave_id` | `prmRamIdxT1..T4` (°C), `prmHALTaho1..2` (RPM), `prmRamIdxBypassActualState`, `prmVOC`, `prmCurrentBLState`, `prmFilterRemainingTime` (days) |
+| Measurement(s) | Input Plugin & Topic / Endpoint | Key Tags | Key Fields |
+|----------------|---------------------------------|----------|------------|
+| `power`, `energy`, `voltage`, `current`, `temperature`, `humidity`, `battery` | `inputs.mqtt_consumer` (`shellies/+/+/+/{power,energy,voltage,current}`, `shellies/+/sensor/{temperature,humidity,battery}`) | `shelly_id`, `shelly_type`, `sub_id` | `value` (float) |
+| `power` | `inputs.mqtt_consumer` (`warp2/22hg/meter/values`, `warp2/22hg/meters/0/values`) | `wallbox_name`, `meter_id` | `power`, `l1..l3_voltage`, `l1..l3_current`, `l1..l3_power`, `l1..l3_apparent_power`, `total_power`, `total_apparent_power`, `frequency` |
+| `power`, `voltage`, `current`, `frequency`, `energy`, `temperature` | `inputs.mqtt_consumer` (`shellies_plug/+/status/switch:0`) | `shelly_id`, `shelly_type=relay` | `value` (from `apower`, `voltage`, `current`, `freq`, `aenergy.total`, `temperature.tC`) |
+| `temperature`, `humidity` | `inputs.mqtt_consumer` (`shellies_plus/+/status/{temperature,humidity}:0`) | `shelly_id` | `value` (from `tC`, `rh`) |
+| `em:0` | `inputs.mqtt_consumer` (`shellies_pro/+/status/em:0`) | `shelly_id` | `a/b/c_{current,voltage,act_power,aprt_power,pf,freq}`, `n_current`, `total_{current,act_power,aprt_power}` |
+| `temperature`, `humidity`, `battery` | `inputs.mqtt_consumer` (`shellies_blu/BLE/ht/+`) | `shelly_id` | `value` (float) |
+| `pluggit_modbus` | `inputs.modbus` (`tcp://192.168.1.19:502`, `slave_id = 1`) | `name`, `type`, `slave_id` | `CurrentBLState`, `RamIdxT1..T4` (°C), `RomIdxSpeedLevel`, `HALTaho1..2` (RPM), `RamIdxBypassActualState`, `VOC` |

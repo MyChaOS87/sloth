@@ -1,9 +1,9 @@
-# SLOTH (SLightly Over engineered "Trivial" Home automation)
+# SLOTH (SLightly Over-engineered "Trivial" Home automation)
 
 ## Introduction
 This is my personal home-server/cluster, built primarily for home automation and as my K3s + Argo CD GitOps playground.
 
-I originally started running it on a [Raspberry Pi CM4 Single Node (Historic / Outdated)](#1-raspberry-pi-cm4-single-node-historic--outdated) (`date: 2022-12-16`), quickly hit hard performance boundaries, and moved to a three-node [Radxa Rock 5B HA Cluster](#2-radxa-rock-5b-ha-cluster) (`rock5b-but`, `rock5b-first`, `rock5b-coffee`, `date: 2023-08-06`, upgraded to Mainline `6.18.y` LTS on `date: 2026-11-08` and migrated to immutable **Kairos OS** + Mainline `7.2+` kernel on `date: 2026-11-14`) complemented by a dedicated 512 MB RAM [Raspberry Pi Zero 2 W Edge Node (`pi0-lcn`)](#3-raspberry-pi-zero-2-w-edge-node-pi0-lcn) (`date: 2026-11-07`) downstairs for physical LCN-PKU USB serial bus access.
+I originally started running it on a [Raspberry Pi CM4 Single Node (Historic / Outdated)](#1-raspberry-pi-cm4-single-node-historic--outdated) (`date: 2022-12-16`), hit CPU, RAM, and I/O limits once Longhorn, Keycloak, InfluxDB, and Prometheus were added, and moved in August 2023 to a three-node [Radxa Rock 5B HA Cluster](#2-radxa-rock-5b-ha-cluster) (`rock5b-but`, `rock5b-first`, `rock5b-coffee`, `date: 2023-08-06`, upgraded to Mainline `6.18.y` LTS on `date: 2026-11-08` and migrated to immutable **Kairos OS** + Mainline `7.2+` kernel on `date: 2026-11-14`) complemented by a dedicated 512 MB RAM [Raspberry Pi Zero 2 W Edge Node (`pi0-lcn`)](#3-raspberry-pi-zero-2-w-edge-node-pi0-lcn) (`date: 2026-11-07`) downstairs for physical LCN-PKU USB serial bus access.
 
 Everything in the cluster is kept as hardware-independent as possible. To deploy onto your own Kubernetes cluster, skip the [Hardware Setup](#hardware-setup) section and start directly with [Bootstrapping Secrets and Argo CD](#bootstrapping-secrets-and-argo-cd) (ensuring your storage nodes meet the Longhorn prerequisites).
 
@@ -28,8 +28,6 @@ Everything in the cluster is kept as hardware-independent as possible. To deploy
 * **Identity & SSO**: [Authelia](https://www.authelia.com/) OIDC + Traefik `ForwardAuth` Single Sign-On (Passkeys/WebAuthn + Argon2id) for Argo CD, Grafana, Longhorn, Prometheus, and VictoriaMetrics
 * **Observability & Telemetry**: [Prometheus](https://prometheus.io/), [Grafana](https://grafana.com/), [VictoriaMetrics](https://victoriametrics.com/), and [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/)
 * **Smarthome & Bus Bridges**: [Mosquitto](https://mosquitto.org/) MQTT broker (`192.168.1.30:1883`), [automqttion](https://github.com/MyChaOS87/automqttion) for declarative MQTT automations, and [reverseLCN](https://github.com/MyChaOS87/reverseLCN) (`lcn2mqtt`) for bidirectional LCN-PKU USB serial $\leftrightarrow$ MQTT bridging on `pi0-lcn`
-
-It's a hobby project, so see [Disclaimer](#disclaimer).
 
 ---
 
@@ -92,14 +90,10 @@ make argocd.password
 
 ---
 
-## Disclaimer
-This is a hobby home project for home use only, it is not intended to be used in potentially hazardous environments...
+## Project Scope & Disclaimer
+`sloth` is a personal homelab and home-automation playground built for a single-operator residential LAN—**not** corporate or enterprise production infrastructure.
 
-Security hardening is not a current design goal at the moment!
-
-Consider this explicitly as **NOT PRODUCTION READY!**
-
-At the current stage I am not shy to break stuff!
+Even where components are hardened (`SealedSecrets`, Authelia Passkey/OIDC SSO, immutable Kairos nodes, and CI policy checks), configurations prioritize homelab pragmatism and experimentation over enterprise compliance, multi-tenancy, or hostile-network hardening (for example, unauthenticated LAN-local MQTT for embedded IoT sensors). Expect opinionated shortcuts and occasional breaking changes. Provided as-is under the [MIT License](./LICENSE) without warranty.
 
 ## License
-[MIT License](LICENSE)
+[MIT License](./LICENSE)
