@@ -10,4 +10,5 @@ data:
     protocol mqtt
 
     log_dest stdout
+    persistence false
     allow_anonymous true

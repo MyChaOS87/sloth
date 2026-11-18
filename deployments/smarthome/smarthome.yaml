@@ -2,41 +2,61 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: victoria-metrics
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: mosquitto
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: telegraf
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: automqttion
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: reverselcn
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: smarthome
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 spec:
-  description: access to the used namespaces for cluster essentials
+  description: access to the used namespaces for smarthome workloads
   sourceRepos:
-    - '*'
+    - https://github.com/MyChaOS87/sloth.git
+    - git@github.com:MyChaOS87/sloth-private.git
+    - https://grafana.github.io/helm-charts
+    - https://helm.influxdata.com/
+    - https://victoriametrics.github.io/helm-charts/
+    - https://mychaos87.github.io/automqttion
+    - https://mychaos87.github.io/reverseLCN
   destinations:
     - namespace: grafana
       server: https://kubernetes.default.svc
@@ -51,7 +71,9 @@ spec:
     - namespace: reverselcn
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-    - group: '*'
-      kind: '*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
   orphanedResources:
     warn: false

@@ -4,7 +4,7 @@ metadata:
   name: kairos-operator
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-10"
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   destination:
     namespace: kairos-operator
@@ -30,6 +30,8 @@ kind: Application
 metadata:
   name: kairos-operator-config
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   destination:
     namespace: kairos-operator

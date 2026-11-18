@@ -57,6 +57,8 @@ kind: Application
 metadata:
   name: external-dns-config
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   destination:
     namespace: external-dns
@@ -70,3 +72,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

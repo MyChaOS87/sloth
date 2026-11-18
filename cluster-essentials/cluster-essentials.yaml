@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: sealed-secrets
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 # do not create this namespace here as system-upgrade definitely wants to do that itself
 # ---
 # apiVersion: v1
@@ -13,47 +15,65 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: metallb
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: traefik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: cert-manager
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: external-dns
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: longhorn
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: prometheus
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: version-checker
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: kairos-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: cluster-essentials
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
 spec:
   description: access to the used namespaces for cluster essentials
   sourceRepos:

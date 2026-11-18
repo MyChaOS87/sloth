@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: prometheus
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   destination:
     namespace: prometheus
@@ -10,6 +12,9 @@ spec:
   project: cluster-essentials
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
+      # Pinned below prometheus-operator v0.95.0/v0.95.1 (bundled through chart 29.47.2), whose
+      # linux/arm64 manifest shipped an amd64 binary (prometheus-operator/prometheus-operator#8953,
+      # fixed in >= v0.95.2). Verify with `make check.images` before bumping past 29.41.0.
       targetRevision: 29.41.0
       chart: prometheus
       helm:
@@ -41,3 +46,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: metallb
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   source:
     repoURL: https://metallb.github.io/metallb
@@ -42,12 +44,15 @@ spec:
       selfHeal: true
     syncOptions:
       - RespectIgnoreDifferences=true
+      - ServerSideApply=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: metallb-config
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   destination:
     namespace: metallb
@@ -64,3 +69,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
