@@ -3,7 +3,7 @@
 DEFAULT_PRIVATE_DIR := $(abspath $(firstword $(wildcard ../../sloth-private/$(notdir $(CURDIR))) $(wildcard ../sloth-private) $(wildcard $(abspath $(shell git rev-parse --git-common-dir 2>/dev/null || echo .git)/../..)/sloth-private) ../sloth-private))
 SLOTH_PRIVATE_DIR ?= $(DEFAULT_PRIVATE_DIR)
 
-GO_MOD_VERSION := $(shell go env GOVERSION | sed -E 's/^go([0-9]+\.[0-9]+).*/\1/')
+GO_MOD_VERSION = $(shell go env GOVERSION | sed -E 's/^go([0-9]+\.[0-9]+).*/\1/')
 TOOLS_DIR := $(CURDIR)/tools
 LEFTHOOK_BIN := $(CURDIR)/.cache/bin/lefthook
 GO_TOOL = "$$(go -C "$(TOOLS_DIR)/$(1)" tool -n $(1))"
@@ -17,7 +17,7 @@ CONFTEST_PRIVATE_FILES := $(if $(CONFTEST_PRIVATE_DIRS),$(shell find $(CONFTEST_
 SEALEDSECRETSVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.source.targetRevision" cluster-essentials/sealed-secrets.yaml)
 ARGOCDVERSION=$(shell yq ". | select(.kind == \"Application\") | .spec.sources[0].targetRevision" argocd-base/argocd.yaml)
 
-$(LEFTHOOK_BIN): checkPrerequisites.go $(TOOLS_DIR)/lefthook/go.mod $(TOOLS_DIR)/lefthook/go.sum $(TOOLS_DIR)/lefthook/dummy.go
+$(LEFTHOOK_BIN): checkPrerequisites.go $(TOOLS_DIR)/lefthook/go.mod $(TOOLS_DIR)/lefthook/go.sum
 	@mkdir -p $(dir $@)
 	@go -C "$(TOOLS_DIR)/lefthook" build -o "$@" github.com/evilmartians/lefthook/v2
 
@@ -62,12 +62,15 @@ tools-tidy: checkPrerequisites.go
 	done
 
 .PHONY: tools-update
-tools-update: checkPrerequisites.go
+tools-update: checkPrerequisites.go checkPrerequisites.jq
 	@for d in tools/* ; do \
 		if [ -d "$$d" ] && [ -f "$$d/go.mod" ] ; then \
 			echo "Updating $$d (go $(GO_MOD_VERSION))..." ; \
 			go -C "$$d" mod edit -go=$(GO_MOD_VERSION) -toolchain=none || exit 1 ; \
-			( cd "$$d" && go get -u $$(go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all) && go mod tidy ) || exit 1 ; \
+			tools="$$(go -C "$$d" mod edit -json | jq -r '.Tool[]?.Path + "@latest"')" ; \
+			if [ -n "$$tools" ]; then \
+				go -C "$$d" get $$tools && go -C "$$d" mod tidy || exit 1 ; \
+			fi ; \
 		fi ; \
 	done
 

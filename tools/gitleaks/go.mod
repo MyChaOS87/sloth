@@ -4,8 +4,6 @@ go 1.27
 
 tool github.com/zricethezav/gitleaks/v8
 
-require github.com/zricethezav/gitleaks/v8 v8.30.1
-
 require (
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
@@ -67,13 +65,24 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/wasilibs/go-re2 v1.9.0 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
+	github.com/zricethezav/gitleaks/v8 v8.30.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+replace (
+	github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3 => github.com/andybalholm/brotli v1.3.0 // fix GO-2026-6888
+	github.com/klauspost/compress v1.17.11 => github.com/klauspost/compress v1.20.4 // fix GHSA-259r-337f-4rfw, GO-2026-6865
+	github.com/nwaples/rardecode/v2 v2.1.0 => github.com/nwaples/rardecode/v2 v2.4.6 // fix GHSA-rwvp-r38j-9rgg
+	github.com/ulikunitz/xz v0.5.12 => github.com/ulikunitz/xz v0.5.17 // fix GHSA-jc7w-c686-c4v9
+	golang.org/x/crypto v0.35.0 => golang.org/x/crypto v0.59.0 // fix GHSA-5cgq-3rg8-m6cv, GO-2026-6355, GO-2026-6303, GO-2026-6354, GO-2026-5932
+	golang.org/x/sys v0.30.0 => golang.org/x/sys v0.50.0 // fix GO-2026-5024
+	golang.org/x/text v0.22.0 => golang.org/x/text v0.44.0 // fix GO-2026-5970, GO-2026-6629
 )

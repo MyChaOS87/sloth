@@ -17,7 +17,7 @@ Verify all required CLI binaries are installed locally via `make checkPrerequisi
 | `kubeseal` | Bitnami Sealed Secrets CLI for encrypting secrets against the cluster key | `make checkPrerequisites.kubeseal` |
 | `go` | Runs pinned Go linters via `go tool` from `tools/<tool>/` cached in `$GOCACHE`, and builds `.cache/bin/lefthook` | `make hooks.install` |
 
-Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/) (`lefthook`, `yamlfmt`, `conftest`, `kubeconform`, `pluto`, `gitleaks`, `crane`, `commitlint`) with `dummy.go` blank imports and run via Go's native `$GOCACHE`-backed `go tool` mechanism (shared by `sloth-private` via `SLOTH_DIR`); only `lefthook` is compiled to `.cache/bin/lefthook` for `.git/hooks/*`.
+Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/) (`lefthook`, `yamlfmt`, `conftest`, `kubeconform`, `pluto`, `gitleaks`, `crane`, `commitlint`) declared via Go `tool` directives in each `go.mod` (no `dummy.go` blank-import files) and run via Go's native `$GOCACHE`-backed `go tool` mechanism (shared by `sloth-private` via `SLOTH_DIR`); only `lefthook` is compiled to `.cache/bin/lefthook` for `.git/hooks/*`. Indirect dependency CVEs inside `tools/<tool>/go.mod` are patched surgically via version-pinned `replace <mod> <old> => <mod> <new> // fix <CVE>` directives rather than blind transitive upgrades.
 
 ---
 
@@ -30,7 +30,7 @@ Pinned GitOps tools live in isolated per-tool modules under [`tools/`](../tools/
 | `make checkPrerequisites.all` | Verify `kubectl`, `helm`, `yq`, `jq`, and `kubeseal` are on `PATH`, and invoke `make hooks.install` to build `.cache/bin/lefthook` + install Git hooks. |
 | `make hooks.install` | Build `.cache/bin/lefthook` from [`tools/lefthook`](../tools/lefthook/go.mod) and install hooks for `pre-commit`, `commit-msg`, and `pre-push`. |
 | `make tools-tidy` | Run `go mod tidy` across every module under [`tools/`](../tools/). |
-| `make tools-update` | Bump each [`tools/`](../tools/) `go.mod` to the active `go env GOVERSION` (`major.minor`, dropping any `toolchain` line), update direct module dependencies (`go get -u`), and tidy. |
+| `make tools-update` | Normalize each [`tools/`](../tools/) `go.mod` Go version (`major.minor`, dropping any `toolchain` line), query each module's `tool` directive via `go mod edit -json`, upgrade only those tool packages (`go get <tool>@latest` without `-u`), and run `go mod tidy`. |
 | `make fmt` | Normalize YAML formatting across repository manifests in place via `yamlfmt` ([`.yamlfmt.yml`](../.yamlfmt.yml)). |
 | `make check.blacklist` | Run [`scripts/check-blacklist.sh`](../scripts/check-blacklist.sh) `--all` across working-tree files, Git author/committer identities, and all reachable Git commits. |
 | `make check.guard` | Run `gitleaks` ([`.gitleaks.toml`](../.gitleaks.toml)) across full Git history and working-tree changes (`--pre-commit`). |

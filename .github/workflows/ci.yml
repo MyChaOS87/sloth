@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Validate manifests, Helm renders, and security guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v7.1.0
+        with:
+          go-version: "1.27"
+          cache-dependency-path: tools/**/go.sum
+
+      - name: Print toolchain versions
+        run: |
+          go version
+          helm version --short
+          kubectl version --client
+          yq --version
+          jq --version
+
+      - name: Run repository checks
+        env:
+          SLOTH_ALLOW_MISSING_BLACKLIST: "1"
+          SLOTH_PRIVATE_DIR: /nonexistent
+        run: make check

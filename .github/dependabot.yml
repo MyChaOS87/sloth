@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: gomod
+    directories:
+      - /tools/commitlint
+      - /tools/conftest
+      - /tools/crane
+      - /tools/gitleaks
+      - /tools/kubeconform
+      - /tools/lefthook
+      - /tools/pluto
+      - /tools/yamlfmt
+    schedule:
+      interval: weekly

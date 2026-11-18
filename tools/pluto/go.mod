@@ -4,8 +4,6 @@ go 1.27.3
 
 tool github.com/fairwindsops/pluto/v5/cmd/pluto
 
-require github.com/fairwindsops/pluto/v5 v5.24.5
-
 require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Masterminds/squirrel v1.5.4 // indirect
@@ -15,6 +13,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
+	github.com/fairwindsops/pluto/v5 v5.24.5 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.6 // indirect
@@ -95,4 +94,9 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
+)
+
+replace (
+	filippo.io/edwards25519 v1.1.0 => filippo.io/edwards25519 v1.2.0 // fix GHSA-fw7p-63qq-7hpr
+	golang.org/x/net v0.61.0 => golang.org/x/net v0.62.0 // fix GO-2026-6860, GO-2026-6866
 )

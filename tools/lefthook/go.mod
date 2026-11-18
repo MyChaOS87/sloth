@@ -4,8 +4,6 @@ go 1.27.0
 
 tool github.com/evilmartians/lefthook/v2
 
-require github.com/evilmartians/lefthook/v2 v2.2.2
-
 require (
 	al.essio.dev/pkg/shellescape v1.6.1 // indirect
 	charm.land/lipgloss/v2 v2.0.6 // indirect
@@ -20,6 +18,7 @@ require (
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/creack/pty v1.1.24 // indirect
+	github.com/evilmartians/lefthook/v2 v2.2.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
@@ -55,8 +54,10 @@ require (
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/term v0.46.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
+
+replace golang.org/x/net v0.59.0 => golang.org/x/net v0.62.0 // fix GO-2026-6612, GO-2026-6603, GO-2026-6611, GO-2026-6617, GO-2026-6610, GO-2026-6860, GO-2026-6866

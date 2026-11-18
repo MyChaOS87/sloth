@@ -4,9 +4,8 @@ go 1.27
 
 tool github.com/conventionalcommit/commitlint
 
-require github.com/conventionalcommit/commitlint v0.12.0
-
 require (
+	github.com/conventionalcommit/commitlint v0.12.0 // indirect
 	github.com/conventionalcommit/parser v0.8.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -15,3 +14,5 @@ require (
 	golang.org/x/mod v0.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace golang.org/x/mod v0.33.0 => golang.org/x/mod v0.43.0 // fix GO-2026-6180, GO-2026-6179
